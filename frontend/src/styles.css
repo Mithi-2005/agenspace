@@ -10,3 +10,94 @@
 .assistant-note{display:flex;align-items:center;gap:8px;margin-top:13px;color:#b7c49b;font-size:11px}
 .assistant-spark{color:var(--lime);font-size:15px}
 @media(max-width:620px){.brand-lockup .brand-name{display:none}.brand-lockup{gap:0}}
+
+/* Auth Pages (Login & Register) */
+.auth-container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:#121312}
+.auth-card{width:100%;max-width:440px;background:#181a18;border:1px solid var(--line);border-radius:16px;padding:36px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.auth-brand-center{display:flex;justify-content:center;margin-bottom:20px}
+.auth-header h1{font:700 22px Manrope,sans-serif;letter-spacing:-.8px;margin:0 0 8px;text-align:center;color:#eeece7}
+.auth-subtext{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin:0 0 24px}
+.auth-form{display:flex;flex-direction:column;gap:18px}
+.form-group{display:flex;flex-direction:column;gap:7px}
+.form-group label{font-size:12px;font-weight:500;color:#b0b4ab}
+.input-wrap{position:relative;display:flex;align-items:center;background:#131413;border:1px solid var(--line);border-radius:9px;transition:border-color .15s ease}
+.input-wrap:focus-within{border-color:var(--lime)}
+.input-wrap input{width:100%;background:transparent;border:none;outline:none;color:#eeece7;font:inherit;font-size:13px;padding:11px 14px 11px 38px}
+.input-icon{position:absolute;left:13px;color:#666b61;pointer-events:none}
+.toggle-password-btn{position:absolute;right:10px;background:none;border:none;color:#666b61;cursor:pointer;padding:4px;display:flex;align-items:center}
+.toggle-password-btn:hover{color:#eeece7}
+.auth-primary-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:var(--lime);color:#171a13;border:none;border-radius:9px;font:700 13px Manrope,sans-serif;cursor:pointer;margin-top:6px;transition:opacity .15s ease}
+.auth-primary-btn:hover:not(:disabled){opacity:.9}
+.auth-primary-btn:disabled{opacity:.4;cursor:not-allowed}
+.auth-footer{margin-top:24px;text-align:center;font-size:12px;color:#8f9389}
+.auth-link-btn{background:none;border:none;color:var(--lime);font-weight:600;cursor:pointer;padding:0 4px;font-size:inherit}
+.auth-link-btn:hover{text-decoration:underline}
+
+/* Alerts and Banners */
+.auth-error-alert{display:flex;align-items:flex-start;gap:10px;background:#2a1719;border:1px solid #5a2529;color:#ff858d;padding:11px 14px;border-radius:9px;font-size:12px;line-height:1.5;margin-bottom:16px}
+.auth-error-alert .alert-icon{flex-shrink:0;margin-top:1px}
+.auth-success-alert{display:flex;align-items:center;gap:10px;background:#1c2818;border:1px solid #2f4e24;color:#a7f394;padding:11px 14px;border-radius:9px;font-size:12px;margin-bottom:16px}
+.verification-info-banner{display:flex;align-items:flex-start;gap:9px;background:#1e221a;border:1px solid #333a27;color:#a9b398;padding:11px 13px;border-radius:9px;font-size:11px;line-height:1.5;margin-bottom:18px}
+.verification-info-banner svg{flex-shrink:0;color:var(--lime);margin-top:1px}
+
+/* Account Page */
+.account-container{min-height:100vh;background:#121312}
+.account-topbar{height:72px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 5.2%;font-size:12px;color:#9b9e95}
+.account-topbar-left{display:flex;align-items:center;gap:8px}
+.account-topbar-left i{color:#55594f;font-style:normal;padding:0 4px}
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:#9b9e95;font:inherit;cursor:pointer;padding:6px 8px;border-radius:6px}
+.back-btn:hover{color:#eeece7;background:#1e201d}
+.account-logout-btn{display:flex;align-items:center;gap:6px;background:#241d1e;border:1px solid #4a2d30;color:#ff9e9e;font:inherit;font-size:11px;padding:7px 12px;border-radius:8px;cursor:pointer}
+.account-logout-btn:hover{background:#332224}
+.account-content{max-width:980px;padding:36px 5.2% 48px;margin:auto}
+.account-hero{display:flex;align-items:center;gap:20px;margin-bottom:34px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.account-avatar{width:64px;height:64px;border-radius:20px;background:var(--lime);color:#171a13;display:grid;place-items:center;font:800 22px Manrope,sans-serif}
+.account-meta h1{font:700 24px Manrope,sans-serif;margin:0 0 4px;letter-spacing:-.8px}
+.account-email{margin:0 0 10px;color:var(--muted);font-size:13px}
+.account-badges{display:flex;align-items:center;gap:8px}
+.active-pill{color:#c1f07d;border-color:#384d20}
+.disabled-pill{color:#ff858d;border-color:#5a2529}
+.disabled-pill b{background:#ff858d}
+.neutral-pill{color:#a7aaa1;border-color:#333630}
+.neutral-pill svg{color:var(--muted)}
+.account-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px}
+.account-card{background:#181a18;border:1px solid var(--line);border-radius:14px;padding:26px}
+.full-width-card{grid-column:1/-1}
+.card-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px}
+.card-icon{color:var(--lime);margin-top:3px;flex-shrink:0}
+.card-header h2{font:600 16px Manrope,sans-serif;margin:0 0 4px}
+.card-header p{margin:0;font-size:12px;color:var(--muted)}
+.account-form{display:flex;flex-direction:column;gap:16px}
+.account-form input{background:#131413;border:1px solid var(--line);border-radius:8px;padding:10px 13px;color:#eeece7;font:inherit;font-size:13px;outline:none}
+.account-form input:focus{border-color:var(--lime)}
+.account-form input:disabled{opacity:.5;cursor:not-allowed}
+.form-hint{font-size:11px;color:#666b61}
+.save-btn{padding:10px 16px;background:var(--lime);color:#171a13;border:none;border-radius:8px;font:700 12px Manrope,sans-serif;cursor:pointer;align-self:flex-start}
+.save-btn:disabled{opacity:.4;cursor:not-allowed}
+.session-warning-note{display:flex;align-items:center;gap:7px;font-size:11px;color:#b89a67;margin:4px 0}
+.session-card-body{display:flex;flex-direction:column;gap:16px}
+.session-card-body p{font-size:12px;line-height:1.7;color:var(--muted);margin:0}
+.revoke-all-btn{padding:10px 16px;background:#2a191b;color:#ff8e8e;border:1px solid #5a272a;border-radius:8px;font:600 12px 'DM Sans',sans-serif;cursor:pointer;align-self:flex-start}
+.revoke-all-btn:hover:not(:disabled){background:#381d20}
+.revoke-all-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Sidebar & Topbar Enhancements */
+.nav-btn-item{background:none;border:none;cursor:pointer;width:100%;text-align:left}
+.user-profile-widget{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#1d201b;border:1px solid #2b3024;border-radius:10px;margin-bottom:12px}
+.widget-avatar{width:32px;height:32px;border-radius:9px;background:var(--lime);color:#171a13;display:grid;place-items:center;font:700 12px Manrope,sans-serif;flex-shrink:0}
+.widget-details{flex:1;min-width:0;display:flex;flex-direction:column}
+.widget-name{font-size:12px;font-weight:600;color:#eeece7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.widget-email{font-size:10px;color:#7e8378;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.widget-logout-btn{background:none;border:none;color:#7e8378;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center}
+.widget-logout-btn:hover{color:#ff858d}
+.topbar-actions{display:flex;align-items:center;gap:12px}
+.account-pill-btn{display:flex;align-items:center;gap:8px;padding:5px 11px 5px 6px;border:1px solid #30342b;border-radius:99px;color:#eeece7;font:500 12px 'DM Sans',sans-serif;background:#181a18;cursor:pointer}
+.account-pill-btn:hover{border-color:var(--lime)}
+.user-badge-avatar{width:22px;height:22px;border-radius:50%;background:var(--lime);color:#171a13;display:grid;place-items:center;font:700 10px Manrope,sans-serif}
+
+/* Loading Screen */
+.app-loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#121312}
+.loading-card{display:flex;flex-direction:column;align-items:center;gap:16px;color:var(--muted);font-size:12px}
+.spinner{width:28px;height:28px;border:2px solid #282d22;border-top-color:var(--lime);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+

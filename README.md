@@ -1,8 +1,8 @@
 # Kosway
 Kosway is a multi-user AI productivity and automation platform. Moon is the in-app AI assistant.
 
-## Centralized branding
-Copy `.env.example` to `.env` in the project root. Change the values:
+## Centralized branding & Configuration
+Copy `.env.example` to `.env` in the project root. Configure your local settings:
 ```env
 APP_NAME=Kosway
 AI_ASSISTANT_NAME=Moon
@@ -10,65 +10,109 @@ BRAND_LOGO_URL=/brand/kosway-mark.svg
 VITE_APP_NAME=Kosway
 VITE_AI_ASSISTANT_NAME=Moon
 VITE_BRAND_LOGO_URL=/brand/kosway-mark.svg
+VITE_API_BASE_URL=http://127.0.0.1:8000
+APP_ENV=development
+API_V1_PREFIX=/api/v1
+SECRET_KEY=replace-with-a-long-random-secret-before-use
+DATABASE_URL=postgresql+psycopg://agentdesk:agentdesk_dev_only@localhost:5433/agentdesk
+CORS_ORIGINS=http://localhost:5173
+LOG_LEVEL=INFO
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+COOKIE_SECURE=false
+COOKIE_SAMESITE=lax
+AUTH_RATE_LIMIT_ENABLED=true
+AUTH_RATE_LIMIT_REQUESTS=10
+AUTH_RATE_LIMIT_WINDOW_SECONDS=60
 ```
-The frontend reads `VITE_` values from the root `.env`; restart Vite after edits. `BrandLogo` is the reusable component for the product mark/name. Replace `frontend/public/brand/kosway-mark.svg` to change the artwork, or update `VITE_BRAND_LOGO_URL` to use a different public asset.
+Generate a strong secret key for production or local development:
+```powershell
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
 ## Requirements
 Python 3.11+, Node.js 20+, Docker Desktop, and optionally pgAdmin.
 
-## Backend and database on Windows
+## Identity & Authentication Architecture (Phase 1)
+Kosway implements an end-to-end, multi-user identity and security system:
+- **Password Security**: Passwords hashed with **Argon2id** (RFC 9106 parameters).
+- **Access Tokens**: Short-lived JWTs (default: 15 minutes) signed with HS256, verified for signature, expiry, issuer, audience, and subject UUID. Access tokens are held **strictly in-memory** in the frontend client (never stored in localStorage).
+- **Refresh Tokens & Sessions**: Cryptographically random opaque tokens stored as SHA-256 hashes in PostgreSQL (`refresh_token_sessions` table). Delivered to browsers via **HttpOnly**, `SameSite=lax`, restricted-path (`/api/v1/auth`) cookies.
+- **Rotation & Reuse Detection**: Every refresh rotates the refresh token. If a previously rotated token is presented (reuse attempt), the entire session family chain is revoked immediately.
+- **Logout & Revocation**: Endpoints support single-session logout (`/auth/logout`) and multi-session revocation (`/auth/logout-all`). Changing passwords automatically revokes all other active sessions.
+- **CSRF & Origin Defenses**: Origin verification blocks cross-origin cookie-authenticated requests.
+- **Rate Limiting**: Sliding-window rate limiter protects registration, login, and refresh endpoints. Pluggable design allows future Redis backend integration.
 
-The root `.env` supplies `DATABASE_URL` to both FastAPI and Alembic. Keep `.env` local; `.env.example` contains development placeholders. For a new checkout, create `.env` once with `Copy-Item .env.example .env`, then confirm `DATABASE_URL` points to `127.0.0.1:5433`.
+### API Endpoints
+- `POST /api/v1/auth/register` — Register a new account (email, display name, password).
+- `POST /api/v1/auth/login` — Authenticate credentials; sets HttpOnly refresh cookie and returns access token.
+- `POST /api/v1/auth/refresh` — Rotates refresh token session and issues fresh access token.
+- `POST /api/v1/auth/logout` — Revokes current session and clears refresh cookie.
+- `POST /api/v1/auth/logout-all` — Revokes all active refresh sessions for authenticated user.
+- `GET /api/v1/users/me` — Retrieve current authenticated user profile.
+- `PATCH /api/v1/users/me` — Update display name.
+- `POST /api/v1/users/me/password` — Change password and revoke existing refresh sessions.
 
-Start the existing PostgreSQL service from the project root:
+## Backend and Database on Windows
 
+Start the PostgreSQL service from the project root:
 ```powershell
 docker compose up -d db
 docker compose ps
 ```
+Compose publishes container port `5432` on Windows host port `5433` (`5433:5432`).
 
-Compose publishes container port `5432` on Windows host port `5433` (`5433:5432`). Tools running on Windows, including the local FastAPI process, must use port `5433`; processes inside the Compose network use the service name `db` and port `5432`.
-
-Activate the existing Conda environment, install the backend dependencies, and apply migrations from the backend directory:
-
+Activate the Conda environment and install dependencies:
 ```powershell
-Set-Location .\backend
 conda activate agent_desk
-python -m pip install --upgrade pip
+Set-Location .\backend
 python -m pip install -e ".[dev]"
-python -m alembic upgrade head
 ```
 
-Alembic reads the same configured URL as the application. There are currently no application models, so no initial migration is included. When models are added, create a revision with `python -m alembic revision --autogenerate -m "describe schema change"`, review it, then apply it with `python -m alembic upgrade head`.
+Apply database migrations:
+```powershell
+python -m alembic upgrade head
+```
+Migration revision `9171e84a323e` creates `users` and `refresh_token_sessions` tables.
 
-Start the API in the activated backend terminal:
-
+Start the FastAPI application:
 ```powershell
 python -m uvicorn app.main:app --reload
 ```
 
-Run the backend tests in a second PowerShell terminal:
-
+Run backend test suite:
 ```powershell
-Set-Location .\backend
-conda activate agent_desk
-python -m pytest
+conda run -n agent_desk python -m pytest
 ```
 
-Check liveness and database readiness in another terminal:
-
+Check API liveness and database readiness:
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/ready
 ```
 
-Liveness only confirms that the API process responds. Readiness performs a real `SELECT 1` against PostgreSQL and returns HTTP `503` if the database cannot be reached.
-
 ## Frontend
 
-From a separate terminal in `frontend`, run `npm install` and `npm run dev`.
+From the `frontend` directory:
+```powershell
+Set-Location .\frontend
+npm.cmd install
+npm.cmd run build   # Type-check and production bundle build
+npm.cmd run lint    # ESLint check
+npm.cmd test        # Vitest test suite
+npm.cmd run dev     # Development server (http://localhost:5173)
+```
 
-API docs: http://127.0.0.1:8000/docs
-Docker runs PostgreSQL; pgAdmin manages it. For a Windows-hosted database client, use host `127.0.0.1`, port `5433`, database `agentdesk`, username `agentdesk`, and the development password from `.env`. These are development-only credentials.
+## Manual Verification Steps
+1. Start backend: `conda run -n agent_desk python -m uvicorn app.main:app --port 8000`
+2. Start frontend: `npm.cmd run dev` in `frontend` directory.
+3. Open `http://localhost:5173` in a browser.
+4. Click "Create account", register with `user@example.com`, display name, and password. You will be authenticated into the Kosway workspace shell.
+5. In the topbar or sidebar, click "Account Settings". Update display name and verify immediate update.
+6. Test changing password under "Password security".
+7. Click "Sign out" and verify redirection to login. Log in with the new password.
+8. Inspect browser dev tools: verify `access_token` is never in `localStorage` or `sessionStorage`, and `refresh_token` cookie has `HttpOnly` flag set with path `/api/v1/auth`.
 
-This is a foundation, not a production release. Authentication, authorization, automation execution, OAuth integrations, and deployment hardening remain. Never commit `.env`. Browser extensions are out of scope.
+## Known Limitations & Future Work
+- **Email Delivery Provider**: Direct verification email dispatch is pending integration of an external transactional email provider (e.g., Resend / SendGrid / Postmark). Newly registered accounts are active immediately, with `is_verified=False`.
+- **Multi-Worker Rate Limiting**: The sliding-window rate limiter runs in-process. In a horizontally scaled multi-worker deployment, connect this interface to a shared Redis instance.

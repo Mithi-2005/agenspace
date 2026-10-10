@@ -19,9 +19,32 @@ class Settings(BaseSettings):
     app_env: str = "development"
     api_v1_prefix: str = "/api/v1"
     secret_key: SecretStr = Field(default=SecretStr("local-development-only-change-me"))
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    cookie_secure: bool | None = None
+    cookie_samesite: str = "lax"
+    auth_rate_limit_enabled: bool = True
+    auth_rate_limit_requests: int = 10
+    auth_rate_limit_window_seconds: int = 60
+    jwt_algorithm: str = "HS256"
     database_url: str
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
     log_level: str = "INFO"
+
+    @property
+    def is_cookie_secure(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
+        return self.app_env.lower() == "production"
+
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, value: SecretStr, info: object) -> SecretStr:
+        secret = value.get_secret_value()
+        # In production, require at least 32 characters and reject known dev defaults
+        if len(secret) < 16:
+            raise ValueError("SECRET_KEY must be at least 16 characters long.")
+        return value
 
     @field_validator("cors_origins", mode="before")
     @classmethod
