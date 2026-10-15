@@ -28,7 +28,10 @@ class Settings(BaseSettings):
     auth_rate_limit_window_seconds: int = 60
     jwt_algorithm: str = "HS256"
     database_url: str
-    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
     log_level: str = "INFO"
 
     @property

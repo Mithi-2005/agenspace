@@ -93,13 +93,14 @@ def rotate_refresh_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Token reuse detection
+    now = datetime.now(UTC)
+    # Token reuse detection — revoke entire family immediately (no grace period).
+    # The frontend deduplicates concurrent refresh calls, so legitimate replay should not occur.
     if session.is_revoked:
-        # Revoke the entire family for security
         db.execute(
             update(RefreshTokenSession)
             .where(RefreshTokenSession.family_id == session.family_id)
-            .values(is_revoked=True, updated_at=datetime.now(UTC))
+            .values(is_revoked=True, updated_at=now)
         )
         db.commit()
         raise HTTPException(
@@ -107,9 +108,6 @@ def rotate_refresh_token(
             detail="Invalid or expired refresh token. Session chain revoked for security.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    # Expiry check
-    now = datetime.now(UTC)
     if session.expires_at <= now:
         session.is_revoked = True
         session.updated_at = now

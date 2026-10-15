@@ -8,47 +8,59 @@ import { AuthContext, type AuthContextType } from "./authContextDef";
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [authStatus, setAuthStatus] = useState<
+    "initializing" | "authenticated" | "unauthenticated"
+  >("initializing");
 
   const refreshSession = async (): Promise<boolean> => {
     try {
       const data = await refreshApi();
       setToken(data.access_token);
       setUser(data.user);
+      setAuthStatus("authenticated");
       return true;
     } catch {
       setAccessToken(null);
       setToken(null);
       setUser(null);
+      setAuthStatus("unauthenticated");
       return false;
     }
   };
 
+  // Restore session on mount using the unified refreshSession code path.
+  // This ensures that session restoration and 401 recovery both go through
+  // requestTokenRefresh(), which deduplicates concurrent calls via a shared
+  // in-flight promise. Using refreshSession() (rather than a separate
+  // restoreSession implementation) prevents the bug where two independent
+  // callers bypass the deduplication guard under React StrictMode or when
+  // API requests fire immediately after mount.
   useEffect(() => {
-    let isMounted = true;
+    let isCancelled = false;
+
     const restoreSession = async () => {
-      try {
-        const data = await refreshApi();
-        if (isMounted) {
-          setToken(data.access_token);
-          setUser(data.user);
-        }
-      } catch {
-        if (isMounted) {
-          setAccessToken(null);
-          setToken(null);
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      // refreshSession updates React state only after await; guard with
+      // isCancelled to avoid setting state on an unmounted provider (e.g.
+      // during React StrictMode double-invoke teardown).
+      const result = await refreshApi();
+      if (!isCancelled) {
+        setToken(result.access_token);
+        setUser(result.user);
+        setAuthStatus("authenticated");
       }
     };
 
-    void restoreSession();
+    restoreSession().catch(() => {
+      if (!isCancelled) {
+        setAccessToken(null);
+        setToken(null);
+        setUser(null);
+        setAuthStatus("unauthenticated");
+      }
+    });
+
     return () => {
-      isMounted = false;
+      isCancelled = true;
     };
   }, []);
 
@@ -56,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await loginApi({ email, password });
     setToken(data.access_token);
     setUser(data.user);
+    setAuthStatus("authenticated");
   };
 
   const register = async (
@@ -74,8 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await logoutApi();
     } finally {
+      setAccessToken(null);
       setToken(null);
       setUser(null);
+      setAuthStatus("unauthenticated");
     }
   };
 
@@ -83,8 +98,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await logoutAllApi();
     } finally {
+      setAccessToken(null);
       setToken(null);
       setUser(null);
+      setAuthStatus("unauthenticated");
     }
   };
 
@@ -104,13 +121,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAccessToken(null);
     setToken(null);
     setUser(null);
+    setAuthStatus("unauthenticated");
   };
 
   const value: AuthContextType = {
     user,
     token: token || getAccessToken(),
-    isLoading,
-    isAuthenticated: !!user,
+    status: authStatus,
+    isLoading: authStatus === "initializing",
+    isAuthenticated: authStatus === "authenticated" && !!user,
     login,
     register,
     logout,

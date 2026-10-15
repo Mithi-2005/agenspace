@@ -1,98 +1,98 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import BrandLogo from "./components/BrandLogo";
+import { AppShell } from "./components/workspace/AppShell";
 import { AuthProvider } from "./context/AuthContext";
+import { TaskProvider } from "./context/TaskProvider";
+import { ToastProvider } from "./context/ToastContext";
 import { useAuth } from "./context/useAuth";
-import { LoginPage } from "./pages/LoginPage";
-import { RegisterPage } from "./pages/RegisterPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { AccountPage } from "./pages/AccountPage";
 import { brandConfig } from "./config/brand";
+import { EventsPage } from "./pages/EventsPage";
+import { AccountPage } from "./pages/AccountPage";
+import { ConnectionsPage } from "./pages/ConnectionsPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { PluginsPage } from "./pages/PluginsPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { TasksPage } from "./pages/TasksPage";
+import { isWorkspaceRoute, navigateTo } from "./routing/hashRoute";
+import { useHashRoute } from "./routing/useHashRoute";
+import { ThemeProvider } from "./theme/ThemeProvider";
 
-type PublicRoute = "login" | "register";
-type AuthenticatedRoute = "dashboard" | "account";
+const Workspace: React.FC = () => {
+  const route = useHashRoute();
+  const workspaceRoute = isWorkspaceRoute(route) ? route : "dashboard";
 
-const AuthenticatedApp: React.FC = () => {
+  let page: React.ReactNode = <DashboardPage />;
+  if (workspaceRoute === "tasks") page = <TasksPage />;
+  else if (workspaceRoute === "events") page = <EventsPage />;
+  else if (workspaceRoute === "connections") page = <ConnectionsPage />;
+  else if (workspaceRoute === "plugins") page = <PluginsPage />;
+  else if (workspaceRoute === "account") page = <AccountPage />;
+
+  return <AppShell route={workspaceRoute}>{page}</AppShell>;
+};
+
+const Root: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  const [publicRoute, setPublicRoute] = useState<PublicRoute>("login");
-  const [authRoute, setAuthRoute] = useState<AuthenticatedRoute>("dashboard");
-
-  useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.toLowerCase();
-      if (hash === "#register") {
-        setPublicRoute("register");
-      } else if (hash === "#login") {
-        setPublicRoute("login");
-      } else if (hash === "#account") {
-        setAuthRoute("account");
-      } else {
-        setAuthRoute("dashboard");
-      }
-    };
-
-    window.addEventListener("hashchange", handleHash);
-    handleHash();
-    return () => window.removeEventListener("hashchange", handleHash);
-  }, []);
+  const route = useHashRoute();
 
   if (isLoading) {
     return (
-      <div className="app-loading-screen">
-        <div className="loading-card">
-          <BrandLogo />
-          <div className="spinner" />
-          <p>Connecting to {brandConfig.appName}...</p>
-        </div>
+      <div className="boot-screen">
+        <BrandLogo />
+        <div className="spinner" aria-hidden="true" />
+        <p>Opening {brandConfig.appName}…</p>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    if (publicRoute === "register") {
+    if (route === "login") {
       return (
-        <RegisterPage
-          onNavigateToLogin={() => {
-            window.location.hash = "#login";
-            setPublicRoute("login");
+        <LoginPage
+          onNavigateToRegister={() => {
+            navigateTo("register");
           }}
         />
       );
     }
-    return (
-      <LoginPage
-        onNavigateToRegister={() => {
-          window.location.hash = "#register";
-          setPublicRoute("register");
-        }}
-      />
-    );
-  }
-
-  if (authRoute === "account") {
-    return (
-      <AccountPage
-        onBackToDashboard={() => {
-          window.location.hash = "#overview";
-          setAuthRoute("dashboard");
-        }}
-      />
-    );
+    if (route === "register") {
+      return (
+        <RegisterPage
+          onNavigateToLogin={() => {
+            navigateTo("login");
+          }}
+        />
+      );
+    }
+    if (isWorkspaceRoute(route)) {
+      return (
+        <LoginPage
+          onNavigateToRegister={() => {
+            navigateTo("register");
+          }}
+        />
+      );
+    }
+    return <LandingPage />;
   }
 
   return (
-    <DashboardPage
-      onNavigateToAccount={() => {
-        window.location.hash = "#account";
-        setAuthRoute("account");
-      }}
-    />
+    <TaskProvider>
+      <Workspace />
+    </TaskProvider>
   );
 };
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AuthenticatedApp />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <Root />
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

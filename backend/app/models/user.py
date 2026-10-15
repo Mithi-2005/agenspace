@@ -9,7 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.event import Event
+    from app.models.plugin import InstalledPlugin
     from app.models.session import RefreshTokenSession
+    from app.models.task import Task
 
 
 class User(Base):
@@ -66,6 +69,24 @@ class User(Base):
 
     sessions: Mapped[list["RefreshTokenSession"]] = relationship(
         "RefreshTokenSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    tasks: Mapped[list["Task"]] = relationship(
+        "Task",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    events: Mapped[list["Event"]] = relationship(
+        "Event",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    installed_plugins: Mapped[list["InstalledPlugin"]] = relationship(
+        "InstalledPlugin",
         back_populates="user",
         cascade="all, delete-orphan",
     )

@@ -4,6 +4,7 @@ import type { User } from "../types/auth";
 export interface AuthContextType {
   user: User | null;
   token: string | null;
+  status?: "initializing" | "authenticated" | "unauthenticated";
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;

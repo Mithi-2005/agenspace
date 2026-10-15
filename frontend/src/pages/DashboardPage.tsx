@@ -1,223 +1,255 @@
-import React from "react";
 import {
-  ArrowUpRight,
+  AlertCircle,
+  ArrowRight,
+  Calendar,
   CalendarClock,
-  Layers3,
-  LogOut,
+  CheckCircle2,
+  Link2,
+  ListTodo,
+  Moon,
   Plus,
-  ShieldCheck,
-  User as UserIcon,
-  Workflow,
+  UserRound,
 } from "lucide-react";
-import BrandLogo from "../components/BrandLogo";
+import React, { useEffect, useState } from "react";
+import { getDashboardApi, type DashboardSummary } from "../api/dashboard";
+import { TaskRow } from "../components/tasks/TaskRow";
 import { brandConfig } from "../config/brand";
 import { useAuth } from "../context/useAuth";
+import { useTasks } from "../context/useTasks";
+import { formatDateTime, formatLongDate, greetingForHour } from "../lib/format";
+import { navigateTo } from "../routing/hashRoute";
 
-const items = [
-  {
-    icon: Workflow,
-    title: "Automations",
-    desc: "Build repeatable workflows from triggers, conditions, and approved actions.",
-    status: "Foundation in progress",
-  },
-  {
-    icon: CalendarClock,
-    title: "Schedules",
-    desc: "Run useful workflows on a schedule and inspect every execution.",
-    status: "Planned",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Connected accounts",
-    desc: "Connect services through official authorization flows with clear permissions.",
-    status: "Planned",
-  },
-];
+export const DashboardPage: React.FC = () => {
+  const { user } = useAuth();
+  const { tasks, completeTask, reopenTask, updateTask, removeTask, openComposer } = useTasks();
+  const greeting = greetingForHour(new Date().getHours());
 
-interface DashboardPageProps {
-  onNavigateToAccount: () => void;
-}
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigateToAccount }) => {
-  const { user, logout } = useAuth();
+  const refreshDashboard = React.useCallback(async () => {
+    try {
+      const data = await getDashboardApi();
+      setSummary(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load dashboard.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const initials = user?.display_name
-    ? user.display_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "U";
+  useEffect(() => {
+    void refreshDashboard();
+  }, [refreshDashboard, tasks]);
+
+  const handleToggleComplete = async (id: string) => {
+    const task = summary?.today_tasks.find((t) => t.id === id) ?? summary?.overdue_tasks.find((t) => t.id === id);
+    if (!task) return;
+    if (task.status === "completed") await reopenTask(id);
+    else await completeTask(id);
+    await refreshDashboard();
+  };
+
+  const handleUpdate = async (id: string, patch: Parameters<typeof updateTask>[1]) => {
+    await updateTask(id, patch);
+    await refreshDashboard();
+  };
+
+  const handleRemove = async (id: string) => {
+    await removeTask(id);
+    await refreshDashboard();
+  };
 
   return (
-    <main className="shell">
-      <aside className="sidebar">
-        <a className="brand" href="/" aria-label={`${brandConfig.appName} home`}>
-          <BrandLogo />
-        </a>
-
-        <p className="nav-label">WORKSPACE</p>
-        <a className="nav-item active" href="#overview">
-          <Layers3 size={17} /> Overview
-        </a>
-        <a className="nav-item" href="#automations">
-          <Workflow size={17} /> Automations
-        </a>
-        <a className="nav-item" href="#runs">
-          <CalendarClock size={17} /> Runs
-        </a>
-
-        <p className="nav-label">SETTINGS</p>
-        <button
-          type="button"
-          className="nav-item nav-btn-item"
-          onClick={onNavigateToAccount}
-        >
-          <UserIcon size={17} /> Account
-        </button>
-
-        <div className="sidebar-bottom">
-          <div className="user-profile-widget">
-            <div className="widget-avatar">{initials}</div>
-            <div className="widget-details">
-              <span className="widget-name">{user?.display_name}</span>
-              <span className="widget-email">{user?.email}</span>
-            </div>
-            <button
-              type="button"
-              className="widget-logout-btn"
-              onClick={logout}
-              title="Sign out"
-              aria-label="Sign out"
-            >
-              <LogOut size={15} />
-            </button>
-          </div>
-
-          <div className="secure-note">
-            <ShieldCheck size={17} />
-            <span>
-              {brandConfig.assistantName}, your AI assistant, will help you manage workflows. Coming soon.
-            </span>
-          </div>
-          <small>EARLY FOUNDATION · 0.1.0</small>
+    <div className="page-dashboard">
+      <header className="page-kicker">
+        <div>
+          <p className="date-line">{formatLongDate()}</p>
+          <h1>
+            {greeting}
+            {user?.display_name ? `, ${user.display_name.split(" ")[0]}` : ""}
+          </h1>
         </div>
-      </aside>
+        <p className="session-chip">Signed in</p>
+      </header>
 
-      <section className="main-panel" id="overview">
-        <header className="topbar">
-          <div className="topbar-breadcrumb">
-            <span>Workspace <i>/</i> Overview</span>
-          </div>
-          <div className="topbar-actions">
-            <button
-              type="button"
-              className="account-pill-btn"
-              onClick={onNavigateToAccount}
-            >
-              <span className="user-badge-avatar">{initials}</span>
-              <span>{user?.display_name}</span>
-            </button>
-            <span className="status-pill">
-              <b /> Active session
-            </span>
-          </div>
-        </header>
-
-        <div className="content">
-          <p className="eyebrow">YOUR PERSONAL AUTOMATION WORKSPACE</p>
-          <div className="hero">
-            <div>
-              <h1>
-                Make busywork
-                <br />
-                <em>work for you.</em>
-              </h1>
-              <p className="hero-copy">
-                {brandConfig.appName} brings recurring digital work into one calm, reliable workspace. Start with useful automations and stay in control of what they can do.
-              </p>
-              <p className="assistant-note">
-                <span className="assistant-spark">✦</span> Meet {brandConfig.assistantName} — your AI assistant, coming soon.
-              </p>
-            </div>
-            <div className="orb" aria-hidden="true">
-              <div className="orb-ring ring-a" />
-              <div className="orb-ring ring-b" />
-              <span>
-                <Layers3 size={29} />
+      {/* Stats row */}
+      {summary && (
+        <div className="dash-stats-row" role="region" aria-label="Productivity metrics">
+          <div className="dash-stat stat-open">
+            <div className="dash-stat-header">
+              <span className="dash-stat-label">Open</span>
+              <span className="dash-stat-icon" aria-hidden="true">
+                <ListTodo size={14} strokeWidth={2} />
               </span>
-              <b className="node n-a">
-                <Workflow size={16} />
-              </b>
-              <b className="node n-b">
-                <CalendarClock size={16} />
-              </b>
-              <b className="node n-c">
-                <ShieldCheck size={16} />
-              </b>
             </div>
+            <p className="dash-stat-value">{summary.tasks_open}</p>
           </div>
 
-          <div className="section-heading" id="automations">
-            <div>
-              <h2>Your workspace</h2>
-              <p>The core building blocks, coming online step by step.</p>
+          <div className="dash-stat stat-due-today">
+            <div className="dash-stat-header">
+              <span className="dash-stat-label">Due today</span>
+              <span className="dash-stat-icon" aria-hidden="true">
+                <CalendarClock size={14} strokeWidth={2} />
+              </span>
             </div>
-            <button disabled>
-              <Plus size={16} /> New automation
-            </button>
+            <p className="dash-stat-value">{summary.tasks_due_today}</p>
           </div>
 
-          <div className="cards">
-            {items.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <article className="cap-card" key={item.title}>
-                  <span className={`cap-icon c-${index}`}>
-                    <Icon size={20} />
-                  </span>
-                  <div className="cap-body">
-                    <h3>{item.title}</h3>
-                    <p>{item.desc}</p>
-                  </div>
-                  <span className="cap-status">{item.status}</span>
-                  <ArrowUpRight size={17} className="arrow" />
-                </article>
-              );
-            })}
+          <div className={`dash-stat stat-overdue ${summary.tasks_overdue > 0 ? "dash-stat-warn" : ""}`}>
+            <div className="dash-stat-header">
+              <span className="dash-stat-label">Overdue</span>
+              <span className="dash-stat-icon" aria-hidden="true">
+                <AlertCircle size={14} strokeWidth={2} />
+              </span>
+            </div>
+            <p className="dash-stat-value">{summary.tasks_overdue}</p>
           </div>
 
-          <div className="bottom-grid">
-            <article className="build-card">
-              <p className="eyebrow">FOUNDATION STATUS</p>
-              <h3>Start with a solid foundation.</h3>
-              <p>
-                Authentication, user isolation, durable workflow state, and safe execution come before advanced AI features.
-              </p>
-              <div className="track">
-                <span />
-              </div>
-              <small>Milestone 1 of 5 · Identity & Security Active</small>
-            </article>
-
-            <article className="build-card principle" id="runs">
-              <p className="eyebrow">01 / PRINCIPLE</p>
-              <h3>You stay in control.</h3>
-              <p>
-                Automations will use explicit permissions, transparent run history, and approval gates for consequential actions.
-              </p>
-              <hr />
-              <small>SAFE BY DESIGN, NOT AS AN AFTERTHOUGHT</small>
-            </article>
+          <div className="dash-stat stat-completed">
+            <div className="dash-stat-header">
+              <span className="dash-stat-label">Completed</span>
+              <span className="dash-stat-icon" aria-hidden="true">
+                <CheckCircle2 size={14} strokeWidth={2} />
+              </span>
+            </div>
+            <p className="dash-stat-value">{summary.tasks_completed}</p>
           </div>
-
-          <footer>
-            <span>{brandConfig.appName.toUpperCase()}</span>
-            <span>Useful automation. Clear control.</span>
-          </footer>
         </div>
-      </section>
-    </main>
+      )}
+
+      <div className="dash-layout">
+        <section className="panel panel-primary" aria-labelledby="today-heading">
+          <header className="panel-head">
+            <div>
+              <h2 id="today-heading">Today</h2>
+              <p>Tasks due today and overdue items.</p>
+            </div>
+            <button type="button" className="btn btn-lime btn-sm" onClick={() => openComposer()}>
+              <Plus size={14} />
+              Add task
+            </button>
+          </header>
+
+          {isLoading ? (
+            <div className="empty-state"><p>Loading…</p></div>
+          ) : error ? (
+            <div className="empty-state"><p className="meta-overdue">{error}</p></div>
+          ) : (
+            <>
+              {(summary?.overdue_tasks ?? []).length > 0 && (
+                <div style={{ marginBottom: "8px" }}>
+                  <p className="panel-title meta-overdue" style={{ paddingBottom: "4px" }}>
+                    <AlertCircle size={13} strokeWidth={1.75} style={{ display: "inline", marginRight: 4 }} aria-hidden="true" />
+                    Overdue
+                  </p>
+                  <ul className="task-list">
+                    {summary!.overdue_tasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        onToggleComplete={(id) => void handleToggleComplete(id)}
+                        onUpdate={(id, patch) => void handleUpdate(id, patch)}
+                        onRemove={(id) => void handleRemove(id)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {(summary?.today_tasks ?? []).length === 0 && (summary?.overdue_tasks ?? []).length === 0 ? (
+                <div className="empty-state">
+                  <p>No open tasks for today.</p>
+                  <button type="button" className="text-link" onClick={() => openComposer()}>Create one</button>
+                </div>
+              ) : (
+                <ul className="task-list">
+                  {(summary?.today_tasks ?? []).map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      onToggleComplete={(id) => void handleToggleComplete(id)}
+                      onUpdate={(id, patch) => void handleUpdate(id, patch)}
+                      onRemove={(id) => void handleRemove(id)}
+                    />
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </section>
+
+        <aside className="dash-side">
+          <section className="panel" aria-labelledby="events-heading">
+            <header className="panel-head">
+              <div>
+                <h2 id="events-heading">Upcoming events</h2>
+                <p>Next 7 days</p>
+              </div>
+              <button type="button" className="icon-btn" aria-label="View all events" onClick={() => navigateTo("events")}>
+                <CalendarClock size={16} strokeWidth={1.75} />
+              </button>
+            </header>
+            {isLoading ? (
+              <div className="empty-state compact"><p>Loading…</p></div>
+            ) : (summary?.upcoming_events ?? []).length === 0 ? (
+              <div className="empty-state compact">
+                <p>No events in the next 7 days.</p>
+                <button type="button" className="text-link" onClick={() => navigateTo("events")}>
+                  Add event <ArrowRight size={13} />
+                </button>
+              </div>
+            ) : (
+              <ul className="task-list">
+                {summary!.upcoming_events.map((event) => (
+                  <li key={event.id} className="task-row">
+                    <span className="task-check" aria-hidden="true">
+                      <Calendar size={13} strokeWidth={1.75} />
+                    </span>
+                    <div className="task-body">
+                      <div className="task-main">
+                        <p className="task-title">{event.title}</p>
+                        <div className="task-meta">
+                          <span>{formatDateTime(event.starts_at)}</span>
+                          {event.location && <span>{event.location}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </aside>
+      </div>
+
+      <nav className="quick-row" aria-label="Quick actions">
+        <button type="button" className="quick-action" onClick={() => openComposer()}>
+          <Plus size={16} />
+          Add task
+        </button>
+        <button type="button" className="quick-action" onClick={() => navigateTo("tasks")}>
+          <CalendarClock size={16} />
+          Open tasks
+        </button>
+        <button type="button" className="quick-action" onClick={() => navigateTo("events")}>
+          <Calendar size={16} />
+          Events
+        </button>
+        <button type="button" className="quick-action" onClick={() => navigateTo("connections")}>
+          <Link2 size={16} />
+          Connections
+        </button>
+        <button type="button" className="quick-action" onClick={() => navigateTo("account")}>
+          <UserRound size={16} />
+          Account
+        </button>
+      </nav>
+
+      <p className="moon-aside">
+        <Moon size={14} strokeWidth={1.75} aria-hidden="true" />
+        {brandConfig.assistantName} will join this workspace later. There is no assistant chat in this release.
+      </p>
+    </div>
   );
 };

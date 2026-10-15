@@ -1,11 +1,29 @@
 import type { TokenResponse } from "../types/auth";
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+export function getApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (typeof window !== "undefined") {
+    // Keep host consistent with browser to prevent cross-site cookie restrictions
+    if (envUrl) {
+      if (window.location.hostname === "localhost" && envUrl.includes("127.0.0.1")) {
+        return envUrl.replace("127.0.0.1", "localhost");
+      }
+      if (window.location.hostname === "127.0.0.1" && envUrl.includes("localhost")) {
+        return envUrl.replace("localhost", "127.0.0.1");
+      }
+      return envUrl;
+    }
+    return window.location.hostname === "localhost"
+      ? "http://localhost:8000"
+      : "http://127.0.0.1:8000";
+  }
+  return envUrl || "http://127.0.0.1:8000";
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 let inMemoryAccessToken: string | null = null;
-let isRefreshing = false;
-let refreshSubscribers: ((token: string | null) => void)[] = [];
+let activeRefreshPromise: Promise<TokenResponse> | null = null;
 
 export function setAccessToken(token: string | null): void {
   inMemoryAccessToken = token;
@@ -13,15 +31,6 @@ export function setAccessToken(token: string | null): void {
 
 export function getAccessToken(): string | null {
   return inMemoryAccessToken;
-}
-
-function onRefreshed(token: string | null): void {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
-
-function addRefreshSubscriber(cb: (token: string | null) => void): void {
-  refreshSubscribers.push(cb);
 }
 
 export class ApiRequestError extends Error {
@@ -32,6 +41,56 @@ export class ApiRequestError extends Error {
     super(detail);
     this.name = "ApiRequestError";
   }
+}
+
+/**
+ * Deduplicated, single-flight token refresh handler.
+ * If a refresh is already in-flight, returns the pending promise.
+ */
+export async function requestTokenRefresh(): Promise<TokenResponse> {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
+    try {
+      const refreshResponse = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!refreshResponse.ok) {
+        const errorData = await refreshResponse.json().catch(() => ({}));
+        let detail = "Session expired. Please log in again.";
+        if (typeof errorData.detail === "string") {
+          detail = errorData.detail;
+        } else if (Array.isArray(errorData.detail)) {
+          detail = errorData.detail
+            .map((d: { msg?: string }) => d.msg || "")
+            .filter(Boolean)
+            .join(" ");
+        }
+        setAccessToken(null);
+        throw new ApiRequestError(refreshResponse.status, detail);
+      }
+
+      const data = (await refreshResponse.json()) as TokenResponse;
+      setAccessToken(data.access_token);
+      return data;
+    } catch (err) {
+      if (err instanceof ApiRequestError && (err.status === 401 || err.status === 403)) {
+        setAccessToken(null);
+      }
+      throw err;
+    } finally {
+      activeRefreshPromise = null;
+    }
+  })();
+
+  return activeRefreshPromise;
 }
 
 export async function apiRequest<T>(
@@ -60,76 +119,26 @@ export async function apiRequest<T>(
     !endpoint.includes("/auth/login") &&
     !endpoint.includes("/auth/refresh")
   ) {
-    // If this request is the initiator of the refresh
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const refreshResponse = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
+    // Single-flight refresh token rotation and retry
+    const refreshed = await requestTokenRefresh();
+    headers.set("Authorization", `Bearer ${refreshed.access_token}`);
+    const retryRes = await fetch(url, { ...options, headers, credentials: "include" });
 
-        if (refreshResponse.ok) {
-          const data = (await refreshResponse.json()) as TokenResponse;
-          setAccessToken(data.access_token);
-          isRefreshing = false;
-          onRefreshed(data.access_token);
-
-          // Retry the initiator request
-          headers.set("Authorization", `Bearer ${data.access_token}`);
-          const retryRes = await fetch(url, { ...options, headers, credentials: "include" });
-          if (!retryRes.ok) {
-            const errorData = await retryRes.json().catch(() => ({}));
-            const detail = errorData.detail || "Request failed";
-            throw new ApiRequestError(
-              retryRes.status,
-              typeof detail === "string" ? detail : JSON.stringify(detail),
-            );
-          }
-          return (await retryRes.json()) as T;
-        } else {
-          setAccessToken(null);
-          isRefreshing = false;
-          onRefreshed(null);
-          throw new ApiRequestError(401, "Session expired. Please log in again.");
-        }
-      } catch (err) {
-        setAccessToken(null);
-        isRefreshing = false;
-        onRefreshed(null);
-        throw err;
+    if (!retryRes.ok) {
+      const errorData = await retryRes.json().catch(() => ({}));
+      let detail = "Request failed";
+      if (typeof errorData.detail === "string") {
+        detail = errorData.detail;
+      } else if (Array.isArray(errorData.detail)) {
+        detail = errorData.detail
+          .map((d: { msg?: string }) => d.msg || "")
+          .filter(Boolean)
+          .join(" ");
       }
+      throw new ApiRequestError(retryRes.status, detail);
     }
 
-    // Concurrent requests that arrived while refresh was already pending
-    return new Promise((resolve, reject) => {
-      addRefreshSubscriber((newToken) => {
-        if (!newToken) {
-          reject(new ApiRequestError(401, "Session expired. Please log in again."));
-          return;
-        }
-        headers.set("Authorization", `Bearer ${newToken}`);
-        fetch(url, { ...options, headers, credentials: "include" })
-          .then(async (retryRes) => {
-            if (!retryRes.ok) {
-              const errorData = await retryRes.json().catch(() => ({}));
-              const detail = errorData.detail || "Request failed";
-              reject(
-                new ApiRequestError(
-                  retryRes.status,
-                  typeof detail === "string" ? detail : JSON.stringify(detail),
-                ),
-              );
-            } else {
-              resolve((await retryRes.json()) as T);
-            }
-          })
-          .catch(reject);
-      });
-    });
+    return (await retryRes.json()) as T;
   }
 
   if (!response.ok) {

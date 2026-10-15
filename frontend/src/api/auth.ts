@@ -1,4 +1,4 @@
-import { apiRequest, setAccessToken } from "./client";
+import { apiRequest, requestTokenRefresh, setAccessToken } from "./client";
 import type { MessageResponse, TokenResponse, User } from "../types/auth";
 
 export async function registerApi(payload: {
@@ -25,11 +25,7 @@ export async function loginApi(payload: {
 }
 
 export async function refreshApi(): Promise<TokenResponse> {
-  const data = await apiRequest<TokenResponse>("/api/v1/auth/refresh", {
-    method: "POST",
-  });
-  setAccessToken(data.access_token);
-  return data;
+  return requestTokenRefresh();
 }
 
 export async function logoutApi(): Promise<MessageResponse> {
