@@ -3,15 +3,21 @@ import {
   ArrowRight,
   Calendar,
   CalendarClock,
+  Check,
   CheckCircle2,
+  Clock,
   Link2,
   ListTodo,
+  Mail,
   Moon,
   Plus,
+  Sparkles,
   UserRound,
+  X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getDashboardApi, type DashboardSummary } from "../api/dashboard";
+import { acceptSuggestionApi, dismissSuggestionApi } from "../api/suggestions";
 import { TaskRow } from "../components/tasks/TaskRow";
 import { brandConfig } from "../config/brand";
 import { useAuth } from "../context/useAuth";
@@ -43,6 +49,8 @@ export const DashboardPage: React.FC = () => {
     void refreshDashboard();
   }, [refreshDashboard, tasks]);
 
+  const [actioningId, setActioningId] = useState<string | null>(null);
+
   const handleToggleComplete = async (id: string) => {
     const task = summary?.today_tasks.find((t) => t.id === id) ?? summary?.overdue_tasks.find((t) => t.id === id);
     if (!task) return;
@@ -59,6 +67,26 @@ export const DashboardPage: React.FC = () => {
   const handleRemove = async (id: string) => {
     await removeTask(id);
     await refreshDashboard();
+  };
+
+  const handleAcceptSuggestion = async (id: string) => {
+    try {
+      setActioningId(id);
+      await acceptSuggestionApi(id);
+      await refreshDashboard();
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleDismissSuggestion = async (id: string) => {
+    try {
+      setActioningId(id);
+      await dismissSuggestionApi(id);
+      await refreshDashboard();
+    } finally {
+      setActioningId(null);
+    }
   };
 
   return (
@@ -117,6 +145,100 @@ export const DashboardPage: React.FC = () => {
             <p className="dash-stat-value">{summary.tasks_completed}</p>
           </div>
         </div>
+      )}
+
+      {/* Pending Suggestions (from Gmail) */}
+      {(summary?.pending_suggestions ?? []).length > 0 && (
+        <section
+          className="panel"
+          style={{
+            marginBottom: "20px",
+            border: "1px solid var(--color-border-subtle)",
+            background: "var(--color-surface-raised, rgba(255, 255, 255, 0.03))",
+          }}
+          aria-labelledby="suggestions-heading"
+        >
+          <header className="panel-head" style={{ marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span className="status-tag status-installed" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <Sparkles size={13} />
+                Needs review
+              </span>
+              <h2 id="suggestions-heading" style={{ fontSize: "1.1rem", margin: 0 }}>
+                Suggestions from Mail ({summary!.pending_suggestions.length})
+              </h2>
+            </div>
+            <p className="meta-text" style={{ fontSize: "0.85rem" }}>
+              Accept to add to your workspace, or dismiss to ignore.
+            </p>
+          </header>
+
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+            {summary!.pending_suggestions.map((sug) => (
+              <li
+                key={sug.id}
+                className="panel"
+                style={{
+                  padding: "12px 16px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "16px",
+                  flexWrap: "wrap",
+                  background: "var(--color-surface, rgba(0,0,0,0.2))",
+                  border: "1px solid var(--color-border-subtle)",
+                }}
+              >
+                <div style={{ flex: 1, minWidth: "240px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <span className="status-tag" style={{ textTransform: "uppercase", fontSize: "0.7rem" }}>
+                      {sug.suggestion_type}
+                    </span>
+                    <strong style={{ fontSize: "0.95rem" }}>{sug.title}</strong>
+                  </div>
+                  <p className="meta-text" style={{ fontSize: "0.8rem", margin: "2px 0 4px" }}>
+                    <Mail size={12} style={{ display: "inline", marginRight: "4px" }} aria-hidden="true" />
+                    <strong>From:</strong> {sug.source_email_from} · <strong>Subject:</strong> {sug.source_email_subject}
+                  </p>
+                  {sug.suggested_date && (
+                    <p className="meta-text" style={{ fontSize: "0.8rem", margin: "2px 0" }}>
+                      <Clock size={12} style={{ display: "inline", marginRight: "4px" }} aria-hidden="true" />
+                      <strong>Suggested {sug.suggestion_type === "event" ? "time" : "due"}:</strong> {formatDateTime(sug.suggested_date)}
+                    </p>
+                  )}
+                  {sug.reasons && (
+                    <span className="status-tag" style={{ fontSize: "0.75rem", marginTop: "4px" }}>
+                      {sug.reasons}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    className="btn btn-lime btn-sm"
+                    onClick={() => void handleAcceptSuggestion(sug.id)}
+                    disabled={actioningId === sug.id}
+                    aria-label={`Accept ${sug.title}`}
+                  >
+                    <Check size={13} />
+                    {actioningId === sug.id ? "Adding…" : `Accept as ${sug.suggestion_type === "event" ? "Event" : "Task"}`}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => void handleDismissSuggestion(sug.id)}
+                    disabled={actioningId === sug.id}
+                    aria-label={`Dismiss ${sug.title}`}
+                  >
+                    <X size={13} />
+                    Dismiss
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <div className="dash-layout">

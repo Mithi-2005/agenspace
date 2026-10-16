@@ -9,7 +9,9 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.events import router as events_router
 from app.api.routes.health import router as health_router
+from app.api.routes.integrations_google import router as integrations_google_router
 from app.api.routes.plugins import router as plugins_router
+from app.api.routes.suggestions import router as suggestions_router
 from app.api.routes.tasks import router as tasks_router
 from app.api.routes.users import router as users_router
 from app.core.config import get_settings
@@ -40,6 +42,16 @@ app.include_router(tasks_router, prefix=f"{settings.api_v1_prefix}/tasks", tags=
 app.include_router(events_router, prefix=f"{settings.api_v1_prefix}/events", tags=["events"])
 app.include_router(dashboard_router, prefix=f"{settings.api_v1_prefix}/dashboard", tags=["dashboard"])
 app.include_router(plugins_router, prefix=f"{settings.api_v1_prefix}/plugins", tags=["plugins"])
+app.include_router(
+    integrations_google_router,
+    prefix=f"{settings.api_v1_prefix}/integrations/google",
+    tags=["integrations-google"],
+)
+app.include_router(
+    suggestions_router,
+    prefix=f"{settings.api_v1_prefix}/suggestions",
+    tags=["suggestions"],
+)
 
 
 @app.exception_handler(SQLAlchemyError)

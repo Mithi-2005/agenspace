@@ -8,10 +8,12 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
+from app.integrations.google.suggestions import list_pending_suggestions
 from app.models.event import Event
 from app.models.task import Task, TaskStatus
 from app.models.user import User
 from app.schemas.event import EventResponse
+from app.schemas.suggestion import SuggestionResponse
 from app.schemas.task import TaskResponse
 
 router = APIRouter()
@@ -25,6 +27,7 @@ class DashboardSummaryResponse(BaseModel):
     today_tasks: list[TaskResponse]
     overdue_tasks: list[TaskResponse]
     upcoming_events: list[EventResponse]
+    pending_suggestions: list[SuggestionResponse] = []
 
 
 @router.get(
@@ -107,6 +110,9 @@ def dashboard_summary(
         ).all()
     )
 
+    # Pending integration suggestions
+    pending_suggestions = list_pending_suggestions(db, current_user.id)
+
     return DashboardSummaryResponse(
         tasks_open=tasks_open,
         tasks_due_today=tasks_due_today,
@@ -115,4 +121,5 @@ def dashboard_summary(
         today_tasks=[TaskResponse.model_validate(t) for t in today_tasks],
         overdue_tasks=[TaskResponse.model_validate(t) for t in overdue_tasks],
         upcoming_events=[EventResponse.model_validate(e) for e in upcoming_events],
+        pending_suggestions=[SuggestionResponse.model_validate(s) for s in pending_suggestions[:10]],
     )

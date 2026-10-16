@@ -10,6 +10,8 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.event import Event
+    from app.models.external_account import ExternalAccount
+    from app.models.oauth_state import OAuthState
     from app.models.plugin import InstalledPlugin
     from app.models.session import RefreshTokenSession
     from app.models.task import Task
@@ -87,6 +89,18 @@ class User(Base):
 
     installed_plugins: Mapped[list["InstalledPlugin"]] = relationship(
         "InstalledPlugin",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    oauth_states: Mapped[list["OAuthState"]] = relationship(
+        "OAuthState",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    external_accounts: Mapped[list["ExternalAccount"]] = relationship(
+        "ExternalAccount",
         back_populates="user",
         cascade="all, delete-orphan",
     )

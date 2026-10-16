@@ -1,6 +1,7 @@
 import { apiRequest } from "./client";
 import type { Task } from "../types/tasks";
 import type { KoswayEvent } from "../types/events";
+import type { Suggestion } from "../types/suggestions";
 
 export interface DashboardSummary {
   tasks_open: number;
@@ -10,6 +11,7 @@ export interface DashboardSummary {
   today_tasks: Task[];
   overdue_tasks: Task[];
   upcoming_events: KoswayEvent[];
+  pending_suggestions: Suggestion[];
 }
 
 export async function getDashboardApi(): Promise<DashboardSummary> {

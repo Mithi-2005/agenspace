@@ -5,9 +5,11 @@ from app.schemas.auth import (
     RegisterRequest,
     TokenResponse,
 )
+from app.schemas.external_account import ExternalAccountResponse
 from app.schemas.user import PasswordChangeRequest, UserResponse, UserUpdateRequest
 
 __all__ = [
+    "ExternalAccountResponse",
     "LoginRequest",
     "MessageResponse",
     "PasswordChangeRequest",
