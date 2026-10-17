@@ -38,6 +38,7 @@ def update_me(
         db=db,
         user=current_user,
         display_name=payload.display_name,
+        timezone=payload.timezone,
     )
     return UserResponse.model_validate(updated_user)
 

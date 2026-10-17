@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -10,6 +11,7 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     display_name: str
+    timezone: str | None = None
     is_active: bool
     is_verified: bool
     verified_at: datetime | None = None
@@ -20,6 +22,7 @@ class UserResponse(BaseModel):
 
 class UserUpdateRequest(BaseModel):
     display_name: str = Field(..., min_length=1, max_length=100)
+    timezone: str | None = Field(default=None, max_length=100)
 
     @field_validator("display_name")
     @classmethod
@@ -28,6 +31,16 @@ class UserUpdateRequest(BaseModel):
         if not cleaned:
             raise ValueError("Display name cannot be empty or solely whitespace.")
         return cleaned
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str | None) -> str | None:
+        if value:
+            try:
+                ZoneInfo(value)
+            except ZoneInfoNotFoundError as exc:
+                raise ValueError("Timezone must be a valid IANA timezone.") from exc
+        return value
 
 
 class PasswordChangeRequest(BaseModel):

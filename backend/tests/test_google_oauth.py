@@ -84,7 +84,8 @@ def test_google_authorize_success(client: TestClient, db_session: Session) -> No
 
     assert "https://accounts.google.com/o/oauth2/v2/auth" in auth_url
     assert "client_id=mock-google-client-id" in auth_url
-    assert "gmail.readonly" in auth_url
+    assert "mail.google.com" in auth_url
+    assert "include_granted_scopes=true" in auth_url
     assert "state=" in auth_url
 
     # Check OAuthState record was persisted in database

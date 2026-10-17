@@ -170,6 +170,10 @@ def test_dismiss_suggestion(client: TestClient, db_session: Session) -> None:
     list_res = client.get("/api/v1/suggestions", headers=headers)
     assert len(list_res.json()) == 0
 
+    accept_res = client.post(f"/api/v1/suggestions/{sug.id}/accept", headers=headers)
+    assert accept_res.status_code == 422
+    assert db_session.scalar(select(Task).where(Task.user_id == user.id)) is None
+
 
 def test_user_isolation_cannot_accept_another_users_suggestion(client: TestClient, db_session: Session) -> None:
     user_a, _ = _create_user_and_token(client, db_session, "user_a")

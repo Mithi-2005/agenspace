@@ -14,6 +14,8 @@ export const AccountPage: React.FC = () => {
   const toast = useToast();
   const { user, updateProfile, changePassword, logoutAll, logout } = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name || "");
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const [timezone, setTimezone] = useState(user?.timezone || browserTimezone);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -41,9 +43,9 @@ export const AccountPage: React.FC = () => {
     }
     setIsUpdatingProfile(true);
     try {
-      await updateProfile(trimmed);
-      setProfileSuccess("Display name saved.");
-      toast.success("Display name updated.");
+      await updateProfile(trimmed, timezone.trim() || null);
+      setProfileSuccess("Profile and timezone saved.");
+      toast.success("Profile updated.");
     } catch (err: unknown) {
       const msg = err instanceof ApiRequestError ? err.detail : "Failed to update profile.";
       setProfileError(msg);
@@ -144,11 +146,19 @@ export const AccountPage: React.FC = () => {
               onChange={(event) => setDisplayName(event.target.value)}
               disabled={isUpdatingProfile}
             />
+            <TextField
+              label="Timezone"
+              id="acc-timezone"
+              value={timezone}
+              onChange={(event) => setTimezone(event.target.value)}
+              disabled={isUpdatingProfile}
+              hint="IANA timezone, for example Asia/Kolkata. Your browser timezone is prefilled."
+            />
             <Button
               type="submit"
               variant="lime"
               loading={isUpdatingProfile}
-              disabled={displayName.trim() === user.display_name}
+              disabled={displayName.trim() === user.display_name && timezone.trim() === (user.timezone || "")}
             >
               {isUpdatingProfile ? "Saving…" : "Save profile"}
             </Button>

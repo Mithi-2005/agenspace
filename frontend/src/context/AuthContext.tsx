@@ -105,8 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (displayName: string): Promise<void> => {
-    const updated = await updateMeApi({ display_name: displayName });
+  const updateProfile = async (displayName: string, timezone?: string | null): Promise<void> => {
+    const updated = await updateMeApi({ display_name: displayName, timezone });
     setUser(updated);
   };
 

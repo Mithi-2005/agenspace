@@ -12,6 +12,8 @@ import {
   disconnectGoogleApi,
   getGoogleAuthorizeUrlApi,
   getGoogleStatusApi,
+  retryGoogleFailuresApi,
+  sendGmailMessageApi,
   triggerGoogleSyncApi,
 } from "../api/integrations";
 import { formatDateTime } from "../lib/format";
@@ -34,14 +36,20 @@ export const ConnectionsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [statusLoadError, setStatusLoadError] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchStatus = React.useCallback(async () => {
     try {
       const status = await getGoogleStatusApi();
       setGoogleStatus(status);
+      setStatusLoadError(false);
     } catch {
-      // Offline or network error
+      setStatusLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -102,8 +110,11 @@ export const ConnectionsPage: React.FC = () => {
       const res = await triggerGoogleSyncApi();
       await fetchStatus();
       setMessage({
-        type: "success",
-        text: `Synchronized ${res.messages_synced} messages. Created ${res.suggestions_created} new suggestions.`,
+        type: res.status === "partial" ? "error" : "success",
+        text:
+          res.status === "partial"
+            ? `Partial sync: ${res.messages_synced} messages checked, ${res.suggestions_created} suggestions created, ${res.extraction_failures} extraction failures, ${res.fetch_failures} fetch failures. Use Retry failed emails after correcting provider or permission issues.`
+            : `Synchronized ${res.messages_synced} messages. Created ${res.suggestions_created} new suggestions.`,
       });
     } catch (err) {
       setMessage({
@@ -112,6 +123,44 @@ export const ConnectionsPage: React.FC = () => {
       });
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleRetryFailed = async () => {
+    try {
+      setIsSyncing(true);
+      setMessage(null);
+      const result = await retryGoogleFailuresApi();
+      await fetchStatus();
+      setMessage({
+        type: result.status === "partial" ? "error" : "success",
+        text:
+          result.status === "partial"
+            ? `Retry finished with ${result.extraction_failures} extraction failures and ${result.fetch_failures} fetch failures remaining.`
+            : `Retry complete. Created ${result.suggestions_created} suggestions.`,
+      });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Retry failed." });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSendEmail = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!window.confirm(`Send this email to ${emailTo}?\n\nSubject: ${emailSubject}`)) return;
+    try {
+      setIsSending(true);
+      setMessage(null);
+      await sendGmailMessageApi({ to: emailTo, subject: emailSubject, body: emailBody, confirmed: true });
+      setEmailTo("");
+      setEmailSubject("");
+      setEmailBody("");
+      setMessage({ type: "success", text: `Email sent to ${emailTo}.` });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Could not send email." });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -158,11 +207,14 @@ export const ConnectionsPage: React.FC = () => {
           <p style={{ margin: 0 }}>{message.text}</p>
         </div>
       )}
+      {statusLoadError && (
+        <p className="field-error" role="alert">Could not load Google connection status. Check your connection and refresh this page.</p>
+      )}
 
       <section className="panel trust-panel">
         <h2>How connections work in Kosway</h2>
         <ul>
-          <li>You authorize an external provider securely using OAuth 2.0 with minimal read-only scopes.</li>
+          <li>Gmail permissions include reading, sending, and changing messages. Permanent deletion requires Google's broad full-mail permission, which requires additional OAuth review and may require security assessment. Every send or destructive action needs its own confirmation.</li>
           <li>Imported suggestions stay in Needs review on your dashboard until you accept or dismiss them.</li>
           <li>Disconnecting a provider revokes integration access while preserving all of your confirmed tasks and events.</li>
         </ul>
@@ -177,7 +229,7 @@ export const ConnectionsPage: React.FC = () => {
           <div className="provider-body">
             <div className="provider-title">
               <h2>Gmail</h2>
-              {isLoading ? (
+            {isLoading ? (
                 <span className="status-tag">Loading…</span>
               ) : googleStatus?.is_connected ? (
                 <span className="status-tag status-installed" style={{ color: "var(--color-primary-dark)" }}>
@@ -202,6 +254,19 @@ export const ConnectionsPage: React.FC = () => {
                     <> · <strong>Status:</strong> {googleStatus.last_sync_status}</>
                   )}
                 </p>
+                {googleStatus.reauthorization_required && (
+                  <div>
+                    <p className="field-error" role="status">
+                      Reconnect Google to grant the requested Gmail permissions. Google will show the additional access before you approve it.
+                    </p>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => void handleConnectGoogle()} disabled={isLoading || isSyncing || isDisconnecting}>
+                      Update Google permissions
+                    </button>
+                  </div>
+                )}
+                {googleStatus.last_error_message && (
+                  <p className="meta-text" role="status">{googleStatus.last_error_message}</p>
+                )}
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
                   <button
                     type="button"
@@ -212,6 +277,16 @@ export const ConnectionsPage: React.FC = () => {
                     <RefreshCw size={13} className={isSyncing ? "animate-spin" : ""} />
                     {isSyncing ? "Syncing…" : "Sync Now"}
                   </button>
+                  {googleStatus.last_sync_status === "partial" && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => void handleRetryFailed()}
+                      disabled={isSyncing || isDisconnecting}
+                    >
+                      {isSyncing ? "Retrying…" : "Retry failed emails"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
@@ -229,12 +304,29 @@ export const ConnectionsPage: React.FC = () => {
                   type="button"
                   className="btn btn-primary btn-sm"
                   onClick={() => void handleConnectGoogle()}
-                  disabled={isLoading}
+                  disabled={isLoading || statusLoadError}
                 >
                   <ExternalLink size={13} />
-                  Connect with Google
+                  {googleStatus?.status === "error" ? "Reconnect Google" : "Connect with Google"}
                 </button>
+                {googleStatus?.status === "error" && (
+                  <p className="field-error" role="status">Google authorization needs attention. Reconnect to grant access again.</p>
+                )}
               </div>
+            )}
+            {googleStatus?.is_connected && (
+              <form onSubmit={(event) => void handleSendEmail(event)} style={{ marginTop: "16px", display: "grid", gap: "8px", maxWidth: "560px" }}>
+                <h3>Send an email</h3>
+                <label htmlFor="gmail-to">To</label>
+                <input id="gmail-to" type="email" required value={emailTo} onChange={(event) => setEmailTo(event.target.value)} />
+                <label htmlFor="gmail-subject">Subject</label>
+                <input id="gmail-subject" required maxLength={998} value={emailSubject} onChange={(event) => setEmailSubject(event.target.value)} />
+                <label htmlFor="gmail-body">Message</label>
+                <textarea id="gmail-body" required rows={4} value={emailBody} onChange={(event) => setEmailBody(event.target.value)} />
+                <button type="submit" className="btn btn-primary btn-sm" disabled={isSending || isSyncing || isDisconnecting || googleStatus.reauthorization_required}>
+                  {isSending ? "Sending…" : "Review and send"}
+                </button>
+              </form>
             )}
           </div>
         </li>

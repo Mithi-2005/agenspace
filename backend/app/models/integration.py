@@ -24,6 +24,7 @@ class GmailMessage(Base):
       • Full email bodies and attachments are NEVER stored.
       • Deduplication enforced per user and Gmail message ID.
     """
+
     __tablename__ = "gmail_messages"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -72,6 +73,10 @@ class GmailMessage(Base):
         nullable=False,
         index=True,
     )
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    extraction_status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False)
+    extraction_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extracted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -91,6 +96,7 @@ class IntegrationSyncState(Base):
     """
     Tracks the synchronization cursor and status for an external provider connection.
     """
+
     __tablename__ = "integration_sync_states"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -153,6 +159,7 @@ class Suggestion(Base):
 
     Suggestions are tentative until explicitly accepted or dismissed by the user.
     """
+
     __tablename__ = "suggestions"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -213,6 +220,10 @@ class Suggestion(Base):
         Text,
         nullable=True,
     )
+    priority: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    timezone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    all_day: Mapped[bool] = mapped_column(default=False, nullable=False)
+    location: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status: Mapped[SuggestionStatus] = mapped_column(
         Enum(SuggestionStatus, name="suggestion_status", create_type=True),
         default=SuggestionStatus.pending,

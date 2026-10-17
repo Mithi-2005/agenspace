@@ -109,7 +109,7 @@ def test_decrypt_with_different_key_raises_value_error(
 
 def test_integrations_configured_property() -> None:
     # Default settings (all None)
-    s = Settings()
+    s = Settings(_env_file=None, database_url="sqlite://")
     assert s.google_client_id is None
     assert s.google_client_secret is None
     assert s.google_redirect_uri is None
@@ -118,6 +118,8 @@ def test_integrations_configured_property() -> None:
 
     # Partial settings
     s_partial = Settings(
+        _env_file=None,
+        database_url="sqlite://",
         GOOGLE_CLIENT_ID="test-client-id",
         GOOGLE_CLIENT_SECRET=SecretStr("test-client-secret"),
     )
@@ -125,6 +127,8 @@ def test_integrations_configured_property() -> None:
 
     # Complete settings
     s_complete = Settings(
+        _env_file=None,
+        database_url="sqlite://",
         GOOGLE_CLIENT_ID="test-client-id",
         GOOGLE_CLIENT_SECRET=SecretStr("test-client-secret"),
         GOOGLE_REDIRECT_URI="http://localhost:8000/api/v1/integrations/google/callback",

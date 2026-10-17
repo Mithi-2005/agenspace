@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  Archive,
   ArrowRight,
   Calendar,
   CalendarClock,
@@ -17,6 +18,11 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getDashboardApi, type DashboardSummary } from "../api/dashboard";
+import {
+  archiveGmailMessageApi,
+  permanentlyDeleteGmailMessageApi,
+  trashGmailMessageApi,
+} from "../api/integrations";
 import { acceptSuggestionApi, dismissSuggestionApi } from "../api/suggestions";
 import { TaskRow } from "../components/tasks/TaskRow";
 import { brandConfig } from "../config/brand";
@@ -27,7 +33,7 @@ import { navigateTo } from "../routing/hashRoute";
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { tasks, completeTask, reopenTask, updateTask, removeTask, openComposer } = useTasks();
+  const { tasks, completeTask, reopenTask, updateTask, removeTask, openComposer, refreshTasks } = useTasks();
   const greeting = greetingForHour(new Date().getHours());
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -50,6 +56,7 @@ export const DashboardPage: React.FC = () => {
   }, [refreshDashboard, tasks]);
 
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
   const handleToggleComplete = async (id: string) => {
     const task = summary?.today_tasks.find((t) => t.id === id) ?? summary?.overdue_tasks.find((t) => t.id === id);
@@ -72,8 +79,12 @@ export const DashboardPage: React.FC = () => {
   const handleAcceptSuggestion = async (id: string) => {
     try {
       setActioningId(id);
+      setSuggestionError(null);
       await acceptSuggestionApi(id);
+      await refreshTasks();
       await refreshDashboard();
+    } catch (err) {
+      setSuggestionError(err instanceof Error ? err.message : "Could not accept this suggestion.");
     } finally {
       setActioningId(null);
     }
@@ -82,8 +93,41 @@ export const DashboardPage: React.FC = () => {
   const handleDismissSuggestion = async (id: string) => {
     try {
       setActioningId(id);
+      setSuggestionError(null);
       await dismissSuggestionApi(id);
       await refreshDashboard();
+    } catch (err) {
+      setSuggestionError(err instanceof Error ? err.message : "Could not dismiss this suggestion.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleSourceMessageAction = async (
+    suggestionId: string,
+    messageId: string,
+    action: "archive" | "trash" | "delete",
+  ) => {
+    const suggestion = summary?.pending_suggestions.find((item) => item.id === suggestionId);
+    if (!suggestion) return;
+    if (action === "delete") {
+      const expected = `DELETE ${messageId} PERMANENTLY`;
+      const entered = window.prompt(
+        `Permanently delete “${suggestion.source_email_subject}” from ${suggestion.source_email_from}? This cannot be undone. Type exactly:\n${expected}`,
+      );
+      if (entered !== expected) return;
+    } else {
+      const verb = action === "archive" ? "Archive" : "Move to Trash";
+      if (!window.confirm(`${verb} “${suggestion.source_email_subject}” from ${suggestion.source_email_from}?`)) return;
+    }
+    try {
+      setActioningId(suggestionId);
+      setSuggestionError(null);
+      if (action === "archive") await archiveGmailMessageApi(messageId);
+      else if (action === "trash") await trashGmailMessageApi(messageId);
+      else await permanentlyDeleteGmailMessageApi(messageId, `DELETE ${messageId} PERMANENTLY`);
+    } catch (err) {
+      setSuggestionError(err instanceof Error ? err.message : "Gmail action failed.");
     } finally {
       setActioningId(null);
     }
@@ -172,6 +216,7 @@ export const DashboardPage: React.FC = () => {
               Accept to add to your workspace, or dismiss to ignore.
             </p>
           </header>
+          {suggestionError && <p className="field-error" role="alert">{suggestionError}</p>}
 
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
             {summary!.pending_suggestions.map((sug) => (
@@ -200,10 +245,21 @@ export const DashboardPage: React.FC = () => {
                     <Mail size={12} style={{ display: "inline", marginRight: "4px" }} aria-hidden="true" />
                     <strong>From:</strong> {sug.source_email_from} · <strong>Subject:</strong> {sug.source_email_subject}
                   </p>
+                  {sug.source_snippet && (
+                    <p className="meta-text" style={{ fontSize: "0.8rem", margin: "4px 0" }}>
+                      <strong>Email context:</strong> {sug.source_snippet}
+                    </p>
+                  )}
                   {sug.suggested_date && (
                     <p className="meta-text" style={{ fontSize: "0.8rem", margin: "2px 0" }}>
                       <Clock size={12} style={{ display: "inline", marginRight: "4px" }} aria-hidden="true" />
-                      <strong>Suggested {sug.suggestion_type === "event" ? "time" : "due"}:</strong> {formatDateTime(sug.suggested_date)}
+                      <strong>Suggested {sug.all_day ? "date" : sug.suggestion_type === "event" ? "time" : "due"}:</strong> {formatDateTime(sug.suggested_date, sug.timezone, sug.all_day)}
+                    </p>
+                  )}
+                  {sug.suggested_end_date && (
+                    <p className="meta-text" style={{ fontSize: "0.8rem", margin: "2px 0" }}>
+                      <Clock size={12} style={{ display: "inline", marginRight: "4px" }} aria-hidden="true" />
+                      <strong>Ends:</strong> {formatDateTime(sug.suggested_end_date, sug.timezone)}
                     </p>
                   )}
                   {sug.reasons && (
@@ -211,14 +267,63 @@ export const DashboardPage: React.FC = () => {
                       {sug.reasons}
                     </span>
                   )}
+                  {sug.description && <p className="meta-text" style={{ fontSize: "0.85rem", margin: "4px 0" }}>{sug.description}</p>}
+                  {(sug.priority || sug.location) && <p className="meta-text" style={{ fontSize: "0.8rem", margin: "4px 0" }}>
+                    {sug.priority && <><strong>Priority:</strong> {sug.priority} </>}
+                    {sug.location && <><strong>Location:</strong> {sug.location}</>}
+                  </p>}
+                  <span className="meta-text" style={{ fontSize: "0.75rem" }}>
+                    {Number.isFinite(Number(sug.confidence))
+                      ? `Confidence ${Math.round(Number(sug.confidence) * 100)}%`
+                      : "Needs review"}
+                  </span>
                 </div>
 
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  {sug.source_message_id && (
+                    <>
+                      <a
+                        className="btn btn-secondary btn-sm"
+                        href={`https://mail.google.com/mail/u/0/#all/${encodeURIComponent(sug.source_message_id)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open source email
+                      </a>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => void handleSourceMessageAction(sug.id, sug.source_message_id!, "archive")}
+                        disabled={actioningId !== null}
+                        aria-label={`Archive source email for ${sug.title}`}
+                      >
+                        <Archive size={13} /> Archive
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => void handleSourceMessageAction(sug.id, sug.source_message_id!, "trash")}
+                        disabled={actioningId !== null}
+                        aria-label={`Move source email to trash for ${sug.title}`}
+                      >
+                        Move to Trash
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => void handleSourceMessageAction(sug.id, sug.source_message_id!, "delete")}
+                        disabled={actioningId !== null}
+                        aria-label={`Permanently delete source email for ${sug.title}`}
+                      >
+                        Delete permanently…
+                      </button>
+                    </>
+                  )}
                   <button
                     type="button"
                     className="btn btn-lime btn-sm"
                     onClick={() => void handleAcceptSuggestion(sug.id)}
-                    disabled={actioningId === sug.id}
+                    disabled={actioningId !== null}
                     aria-label={`Accept ${sug.title}`}
                   >
                     <Check size={13} />
@@ -228,7 +333,7 @@ export const DashboardPage: React.FC = () => {
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={() => void handleDismissSuggestion(sug.id)}
-                    disabled={actioningId === sug.id}
+                    disabled={actioningId !== null}
                     aria-label={`Dismiss ${sug.title}`}
                   >
                     <X size={13} />
@@ -332,7 +437,7 @@ export const DashboardPage: React.FC = () => {
                       <div className="task-main">
                         <p className="task-title">{event.title}</p>
                         <div className="task-meta">
-                          <span>{formatDateTime(event.starts_at)}</span>
+                          <span>{formatDateTime(event.starts_at, event.timezone, event.all_day)}</span>
                           {event.location && <span>{event.location}</span>}
                         </div>
                       </div>

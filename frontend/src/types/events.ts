@@ -6,8 +6,10 @@ export interface KoswayEvent {
   title: string;
   description: string | null;
   starts_at: string;
-  ends_at: string;
+  ends_at: string | null;
   location: string | null;
+  timezone: string | null;
+  all_day: boolean;
   source: EventSource;
   created_at: string;
   updated_at: string;
@@ -17,16 +19,20 @@ export interface EventCreate {
   title: string;
   description?: string | null;
   starts_at: string;
-  ends_at: string;
+  ends_at?: string | null;
   location?: string | null;
+  timezone?: string | null;
+  all_day?: boolean;
 }
 
 export interface EventUpdate {
   title?: string;
   description?: string | null;
   starts_at?: string;
-  ends_at?: string;
+  ends_at?: string | null;
   location?: string | null;
+  timezone?: string | null;
+  all_day?: boolean;
 }
 
 export interface EventListResponse {

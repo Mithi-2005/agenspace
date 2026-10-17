@@ -1,7 +1,7 @@
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -72,6 +72,19 @@ class Settings(BaseSettings):
         default=None,
         description="Fernet key used to encrypt OAuth tokens at rest",
     )
+    # Gmail intelligence can use Gemini or Grok; credentials are backend only.
+    ai_provider: Literal["gemini", "xai"] = "gemini"
+    ai_model: str | None = None
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = "gemini-3.8-flash"
+    xai_api_key: SecretStr | None = None
+    xai_model: str = "grok-4.7"
+    ai_timeout_seconds: float = Field(default=30.0, gt=0, le=180)
+    ai_max_retries: int = Field(default=2, ge=0, le=5)
+    # Backward-compatible Grok-specific overrides for existing .env files.
+    xai_timeout_seconds: float | None = Field(default=None, gt=0, le=180)
+    xai_max_retries: int | None = Field(default=None, ge=0, le=5)
+    gmail_sync_window_days: int = Field(default=14, ge=1, le=365)
 
     # ------------------------------------------------------------------
     # Computed properties
@@ -98,6 +111,38 @@ class Settings(BaseSettings):
             and self.google_redirect_uri is not None
             and self.integration_encryption_key is not None
         )
+
+    @property
+    def xai_configured(self) -> bool:
+        """Return whether a nonblank xAI API key is available."""
+        return bool(self.xai_api_key and self.xai_api_key.get_secret_value().strip())
+
+    @property
+    def active_ai_api_key(self) -> SecretStr | None:
+        return self.gemini_api_key if self.ai_provider == "gemini" else self.xai_api_key
+
+    @property
+    def active_ai_model(self) -> str:
+        if self.ai_model and self.ai_model.strip():
+            return self.ai_model.strip()
+        return self.gemini_model if self.ai_provider == "gemini" else self.xai_model
+
+    @property
+    def ai_configured(self) -> bool:
+        key = self.active_ai_api_key
+        return bool(key and key.get_secret_value().strip())
+
+    @property
+    def active_ai_timeout_seconds(self) -> float:
+        if self.ai_provider == "xai" and self.xai_timeout_seconds is not None:
+            return self.xai_timeout_seconds
+        return self.ai_timeout_seconds
+
+    @property
+    def active_ai_max_retries(self) -> int:
+        if self.ai_provider == "xai" and self.xai_max_retries is not None:
+            return self.xai_max_retries
+        return self.ai_max_retries
 
     # ------------------------------------------------------------------
     # Validators

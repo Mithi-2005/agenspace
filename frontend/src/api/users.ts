@@ -9,6 +9,7 @@ export async function getMeApi(): Promise<User> {
 
 export async function updateMeApi(payload: {
   display_name: string;
+  timezone?: string | null;
 }): Promise<User> {
   return apiRequest<User>("/api/v1/users/me", {
     method: "PATCH",

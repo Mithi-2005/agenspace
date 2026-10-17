@@ -14,10 +14,10 @@ if TYPE_CHECKING:
 
 
 class EventSource(str, enum.Enum):
-    user = "user"           # Manually created
-    imported = "imported"   # Imported from calendar/Gmail
-    suggested = "suggested" # Detected, pending confirmation
-    confirmed = "confirmed" # Detected and confirmed
+    user = "user"  # Manually created
+    imported = "imported"  # Imported from calendar/Gmail
+    suggested = "suggested"  # Detected, pending confirmation
+    confirmed = "confirmed"  # Detected and confirmed
 
 
 class Event(Base):
@@ -47,14 +47,16 @@ class Event(Base):
         nullable=False,
         index=True,
     )
-    ends_at: Mapped[datetime] = mapped_column(
+    ends_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
     )
     location: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True,
     )
+    timezone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    all_day: Mapped[bool] = mapped_column(default=False, nullable=False)
     source: Mapped[EventSource] = mapped_column(
         Enum(EventSource, name="event_source", create_type=True),
         default=EventSource.user,

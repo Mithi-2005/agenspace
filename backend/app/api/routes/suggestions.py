@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.integrations.google.suggestions import (
+    SuggestionError,
     SuggestionNotFoundError,
     accept_suggestion,
     dismiss_suggestion,
@@ -36,7 +37,15 @@ def list_suggestions(
 ) -> list[SuggestionResponse]:
     """Retrieve all pending suggestions derived from integration sync."""
     items = list_pending_suggestions(db, current_user.id)
-    return [SuggestionResponse.model_validate(item) for item in items]
+    return [
+        SuggestionResponse.model_validate(item).model_copy(
+            update={
+                "source_message_id": item.message.message_id if item.message else None,
+                "source_snippet": item.message.snippet if item.message else None,
+            }
+        )
+        for item in items
+    ]
 
 
 @router.post(
@@ -54,6 +63,11 @@ def accept_single_suggestion(
     except SuggestionNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except SuggestionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         ) from exc
 

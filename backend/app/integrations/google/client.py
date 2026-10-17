@@ -5,12 +5,10 @@ Handles authorization URL generation, server-side code exchange, Google identity
 retrieval (using stable `sub`), and token refresh using standard Google endpoints.
 
 Security constraints:
-  • Requests ONLY the minimum required scopes:
-      - openid
-      - https://www.googleapis.com/auth/userinfo.email
-      - https://www.googleapis.com/auth/gmail.readonly
-  • Never logs raw authorization codes, client secrets, access tokens, or refresh tokens.
-  • Raises descriptive, safe exceptions on communication or provider errors.
+  - Requests Gmail full-mail access because the product explicitly supports read, send, modify, trash, and permanent delete operations.
+  - Users receive a separate explicit confirmation for sending and every destructive message action.
+  - Never logs raw authorization codes, client secrets, access tokens, or refresh tokens.
+  - Raises descriptive, safe exceptions on communication or provider errors.
 """
 
 import logging
@@ -29,7 +27,7 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 GOOGLE_SCOPES: list[str] = [
     "openid",
     "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://mail.google.com/",
 ]
 
 
@@ -81,6 +79,7 @@ def build_authorization_url(state: str) -> str:
         "scope": " ".join(GOOGLE_SCOPES),
         "access_type": "offline",
         "prompt": "consent",
+        "include_granted_scopes": "true",
         "state": state,
     }
 

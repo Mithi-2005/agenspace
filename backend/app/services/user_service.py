@@ -63,8 +63,10 @@ def update_user_profile(
     db: Session,
     user: User,
     display_name: str,
+    timezone: str | None = None,
 ) -> User:
     user.display_name = display_name.strip()
+    user.timezone = timezone
     user.updated_at = datetime.now(UTC)
     db.commit()
     db.refresh(user)

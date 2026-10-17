@@ -1,13 +1,19 @@
 import { Calendar, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { createEventApi, deleteEventApi, listEventsApi, updateEventApi } from "../api/events";
-import { fromDatetimeLocalValue, formatDateTime, toDatetimeLocalValue } from "../lib/format";
+import {
+  fromDatetimeLocalValue,
+  formatDateTime,
+  toDateLocalValue,
+  toDatetimeLocalValue,
+} from "../lib/format";
 import type { KoswayEvent, EventCreate, EventUpdate } from "../types/events";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Dialog } from "../components/ui/Dialog";
 import { TextField } from "../components/ui/TextField";
 import { useToast } from "../context/ToastContext";
+import { useAuth } from "../context/useAuth";
 
 export const EventsPage: React.FC = () => {
   const toast = useToast();
@@ -195,6 +201,7 @@ interface EventRowProps {
 
 const EventRow: React.FC<EventRowProps> = ({ event, past, onEdit, onDelete }) => {
   const duration = (() => {
+    if (!event.ends_at) return null;
     const start = new Date(event.starts_at);
     const end = new Date(event.ends_at);
     const mins = Math.round((end.getTime() - start.getTime()) / 60000);
@@ -215,8 +222,8 @@ const EventRow: React.FC<EventRowProps> = ({ event, past, onEdit, onDelete }) =>
           {event.description && <p className="task-note">{event.description}</p>}
           <div className="task-meta">
             <span>
-              {formatDateTime(event.starts_at)}
-              <span style={{ opacity: 0.55 }}> · {duration}</span>
+              {formatDateTime(event.starts_at, event.timezone, event.all_day)}
+              {duration && <span style={{ opacity: 0.55 }}> · {duration}</span>}
             </span>
             {event.location && (
               <span>
@@ -262,11 +269,13 @@ interface EventModalProps {
 }
 
 const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, onSaved }) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [location, setLocation] = useState("");
+  const [allDay, setAllDay] = useState(false);
   const [titleError, setTitleError] = useState<string | undefined>();
   const [dateError, setDateError] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState(false);
@@ -274,23 +283,30 @@ const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, on
 
   useEffect(() => {
     if (!open) return;
+    const zone = initialEvent?.timezone ?? user?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (initialEvent) {
       setTitle(initialEvent.title);
       setDescription(initialEvent.description ?? "");
-      setStartsAt(toDatetimeLocalValue(initialEvent.starts_at));
-      setEndsAt(toDatetimeLocalValue(initialEvent.ends_at));
+      setStartsAt(
+        initialEvent.all_day
+          ? toDateLocalValue(initialEvent.starts_at, zone)
+          : toDatetimeLocalValue(initialEvent.starts_at, zone),
+      );
+      setEndsAt(toDatetimeLocalValue(initialEvent.ends_at, zone));
       setLocation(initialEvent.location ?? "");
+      setAllDay(initialEvent.all_day);
     } else {
       setTitle("");
       setDescription("");
       setStartsAt("");
       setEndsAt("");
       setLocation("");
+      setAllDay(false);
     }
     setTitleError(undefined);
     setDateError(undefined);
     setSubmitError(null);
-  }, [open, initialEvent]);
+  }, [open, initialEvent, user?.timezone]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -299,17 +315,14 @@ const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, on
       setTitleError("Add a title for this event.");
       return;
     }
-    const start = fromDatetimeLocalValue(startsAt);
-    const end = fromDatetimeLocalValue(endsAt);
+    const zone = initialEvent?.timezone ?? user?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const start = fromDatetimeLocalValue(allDay ? `${startsAt}T00:00` : startsAt, zone);
+    const end = allDay ? null : fromDatetimeLocalValue(endsAt, zone);
     if (!start) {
       setDateError("Start time is required.");
       return;
     }
-    if (!end) {
-      setDateError("End time is required.");
-      return;
-    }
-    if (new Date(end) <= new Date(start)) {
+    if (end && new Date(end) <= new Date(start)) {
       setDateError("End time must be strictly after start time.");
       return;
     }
@@ -323,6 +336,8 @@ const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, on
           description: description.trim() || null,
           starts_at: start,
           ends_at: end,
+          timezone: zone,
+          all_day: allDay,
           location: location.trim() || null,
         };
         const updated = await updateEventApi(initialEvent.id, payload);
@@ -333,6 +348,8 @@ const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, on
           description: description.trim() || undefined,
           starts_at: start,
           ends_at: end,
+          timezone: zone,
+          all_day: allDay,
           location: location.trim() || undefined,
         };
         const created = await createEventApi(payload);
@@ -364,18 +381,46 @@ const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, on
           autoComplete="off"
         />
         <div className="composer-grid">
-          <TextField
-            label="Start"
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-          />
-          <TextField
-            label="End"
-            type="datetime-local"
-            value={endsAt}
-            onChange={(e) => setEndsAt(e.target.value)}
-          />
+          <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <input
+              type="checkbox"
+              checked={allDay}
+              onChange={(event) => {
+                const zone = initialEvent?.timezone ?? user?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const instant = fromDatetimeLocalValue(
+                  allDay ? `${startsAt}T00:00` : startsAt,
+                  zone,
+                );
+                setStartsAt(
+                  event.target.checked
+                    ? instant
+                      ? toDateLocalValue(instant, zone)
+                      : ""
+                    : startsAt
+                      ? `${startsAt}T00:00`
+                      : "",
+                );
+                setAllDay(event.target.checked);
+              }}
+            />
+            All-day event
+          </label>
+          <div className="composer-grid">
+            <TextField
+              label={allDay ? "Date" : "Start"}
+              type={allDay ? "date" : "datetime-local"}
+              value={startsAt}
+              onChange={(e) => setStartsAt(e.target.value)}
+            />
+            {!allDay && (
+              <TextField
+                label="End (optional)"
+                type="datetime-local"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+              />
+            )}
+          </div>
         </div>
         {dateError && (
           <p className="field-error" role="alert">

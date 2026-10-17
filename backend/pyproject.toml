@@ -13,6 +13,7 @@ dependencies = [
   "alembic>=1.13,<2.0",
   "sqlalchemy>=2.0,<3.0",
   "psycopg[binary]>=3.2,<4.0",
+  "httpx>=0.27,<1.0",
   "argon2-cffi>=23.1.0",
   "pyjwt>=2.8.0",
   "cryptography>=43,<45",
@@ -20,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<9", "httpx>=0.27,<1", "ruff>=0.6,<1"]
+dev = ["pytest>=8,<9", "ruff>=0.6,<1"]
 
 [tool.setuptools.packages.find]
 where = ["."]
