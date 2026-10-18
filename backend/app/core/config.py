@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
     )
-    app_name: str = "Kosway"
+    app_name: str = "AgenSpace"
     ai_assistant_name: str = "Moon"
-    brand_logo_url: str = "/brand/kosway-mark.svg"
+    brand_logo_url: str = "/brand/agenspace-mark.svg"
     app_env: str = "development"
     api_v1_prefix: str = "/api/v1"
     secret_key: SecretStr = Field(default=SecretStr("local-development-only-change-me"))

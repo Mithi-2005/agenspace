@@ -1,4 +1,4 @@
-import type { PluginCategory, PluginListing } from "../types/plugins";
+import type { PluginCategory, PluginListing } from "./types";
 
 export const PLUGIN_CATEGORIES: PluginCategory[] = [
   "All",
@@ -60,7 +60,7 @@ export const STATIC_PLUGIN_CATALOG: PluginListing[] = [
     name: "Google Classroom",
     summary: "Coursework, assignment deadlines, and syllabus tracking from Google Classroom.",
     description:
-      "Sync active courses, upcoming coursework due dates, teacher announcements, and submission states directly into Kosway tasks and calendar agenda. Keeps students ahead of coursework deadlines without manual data entry.",
+      "Sync active courses, upcoming coursework due dates, teacher announcements, and submission states directly into AgenSpace tasks and calendar agenda. Keeps students ahead of coursework deadlines without manual data entry.",
     category: "Education",
     icon: "graduation-cap",
     publisher: {
@@ -110,7 +110,7 @@ export const STATIC_PLUGIN_CATALOG: PluginListing[] = [
     name: "Google Calendar",
     summary: "Two-way calendar agenda synchronization and event scheduling intelligence.",
     description:
-      "Seamlessly mirror commitments from Google Calendar into Kosway's daily agenda and spatial overview. Enables Moon to detect scheduling conflicts, suggest focus blocks, and notify you before high-priority meetings.",
+      "Seamlessly mirror commitments from Google Calendar into AgenSpace's daily agenda and spatial overview. Enables Moon to detect scheduling conflicts, suggest focus blocks, and notify you before high-priority meetings.",
     category: "Calendar",
     icon: "calendar",
     publisher: {
@@ -209,7 +209,7 @@ export const STATIC_PLUGIN_CATALOG: PluginListing[] = [
     category: "Education",
     icon: "school",
     publisher: {
-      name: "Kosway Academic Consortium",
+      name: "AgenSpace Academic Consortium",
       verified: true,
       support_url: "https://kosway.app/education",
     },
@@ -248,9 +248,9 @@ export const STATIC_PLUGIN_CATALOG: PluginListing[] = [
   {
     id: "notion",
     name: "Notion",
-    summary: "Sync workspace databases, task lists, and meeting notes with Kosway.",
+    summary: "Sync workspace databases, task lists, and meeting notes with AgenSpace.",
     description:
-      "Integrate Notion pages and databases with Kosway tasks. Seamlessly link sprint backlogs, personal wikis, and project documentation directly to your daily focus workflows.",
+      "Integrate Notion pages and databases with AgenSpace tasks. Seamlessly link sprint backlogs, personal wikis, and project documentation directly to your daily focus workflows.",
     category: "Productivity",
     icon: "file-text",
     publisher: {

@@ -56,7 +56,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      <section ref={sequenceRef} className="landing-sequence" aria-label="Kosway spatial introduction">
+      <section ref={sequenceRef} className="landing-sequence" aria-label="AgenSpace spatial introduction">
         <div className="landing-sticky">
           <div className="landing-hero-copy">
             <p className="eyebrow">Personal productivity environment</p>

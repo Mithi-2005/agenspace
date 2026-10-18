@@ -1,7 +1,7 @@
 """
 External account persistence and token management service.
 
-This module manages connected external accounts (such as Google OAuth) for Kosway users.
+This module manages connected external accounts (such as Google OAuth) for AgenSpace users.
 
 Security & Architecture Guarantees
 ----------------------------------
@@ -36,7 +36,7 @@ from sqlalchemy.orm import Session
 from app.integrations.crypto import decrypt_token, encrypt_token
 from app.models.external_account import ExternalAccount, ExternalAccountStatus
 
-logger = logging.getLogger("kosway.integrations.external_account")
+logger = logging.getLogger("agenspace.integrations.external_account")
 
 
 class ExternalAccountError(ValueError):
@@ -64,14 +64,14 @@ def upsert_external_account(
     auto_commit: bool = True,
 ) -> ExternalAccount:
     """
-    Connect or reconnect an external provider account for a Kosway user.
+    Connect or reconnect an external provider account for an AgenSpace user.
 
     Parameters
     ----------
     db : Session
         SQLAlchemy database session.
     user_id : uuid.UUID
-        Authenticated Kosway user ID.
+        Authenticated AgenSpace user ID.
     provider : str
         Provider identifier (e.g. 'google').
     provider_user_id : str
@@ -163,7 +163,7 @@ def upsert_external_account(
             normalized_provider,
         )
     else:
-        # Ensure provider account is not already claimed by a different Kosway user
+        # Ensure provider account is not already claimed by a different AgenSpace user
         other_user_account = db.scalar(
             select(ExternalAccount).where(
                 ExternalAccount.provider == normalized_provider,
@@ -225,7 +225,7 @@ def get_external_account(
     db : Session
         SQLAlchemy database session.
     user_id : uuid.UUID
-        Authenticated Kosway user ID.
+        Authenticated AgenSpace user ID.
     provider : str
         Provider identifier (e.g. 'google').
 
@@ -282,7 +282,7 @@ def update_external_account_status(
     db : Session
         SQLAlchemy database session.
     user_id : uuid.UUID
-        Authenticated Kosway user ID.
+        Authenticated AgenSpace user ID.
     provider : str
         Provider identifier.
     status : ExternalAccountStatus
@@ -336,7 +336,7 @@ def delete_external_account(
     db : Session
         SQLAlchemy database session.
     user_id : uuid.UUID
-        Authenticated Kosway user ID.
+        Authenticated AgenSpace user ID.
     provider : str
         Provider identifier.
     auto_commit : bool

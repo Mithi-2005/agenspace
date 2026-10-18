@@ -1,4 +1,4 @@
-export const THEME_STORAGE_KEY = "kosway-theme";
+export const THEME_STORAGE_KEY = "agenspace-theme";
 
 export type ThemePreference = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";

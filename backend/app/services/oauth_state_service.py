@@ -38,7 +38,7 @@ from sqlalchemy.orm import Session
 from app.core.security import hash_token
 from app.models.oauth_state import OAuthState
 
-logger = logging.getLogger("kosway.oauth.state")
+logger = logging.getLogger("agenspace.oauth.state")
 
 DEFAULT_STATE_EXPIRY_SECONDS = 600  # 10 minutes
 
@@ -83,7 +83,7 @@ def generate_oauth_state(
     db : Session
         SQLAlchemy database session.
     user_id : uuid.UUID
-        The authenticated Kosway user initiating the authorization flow.
+        The authenticated AgenSpace user initiating the authorization flow.
     provider : str
         Provider identifier (e.g. 'google').
     expires_in_seconds : int

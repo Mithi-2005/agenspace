@@ -22,7 +22,7 @@ import {
   archiveGmailMessageApi,
   permanentlyDeleteGmailMessageApi,
   trashGmailMessageApi,
-} from "../api/integrations";
+} from "../features/gmail/api";
 import { acceptSuggestionApi, dismissSuggestionApi } from "../api/suggestions";
 import { TaskRow } from "../components/tasks/TaskRow";
 import { brandConfig } from "../config/brand";

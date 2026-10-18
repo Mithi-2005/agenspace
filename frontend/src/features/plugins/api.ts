@@ -1,9 +1,9 @@
-import { apiRequest } from "./client";
+import { apiRequest } from "../../api/client";
 import type {
   InstalledPluginResponse,
   PluginListing,
   PluginListResponse,
-} from "../types/plugins";
+} from "./types";
 
 export async function fetchPlugins(params?: {
   category?: string;

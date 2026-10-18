@@ -1,6 +1,16 @@
+from datetime import datetime
 from email.utils import parseaddr
 
 from pydantic import BaseModel, Field, field_validator
+
+
+class GmailSyncResponse(BaseModel):
+    status: str
+    messages_synced: int
+    suggestions_created: int
+    extraction_failures: int = 0
+    fetch_failures: int = 0
+    last_synced_at: datetime | None = None
 
 
 class GmailSendRequest(BaseModel):

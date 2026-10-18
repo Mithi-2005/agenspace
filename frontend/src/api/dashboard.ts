@@ -1,6 +1,6 @@
 import { apiRequest } from "./client";
 import type { Task } from "../types/tasks";
-import type { KoswayEvent } from "../types/events";
+import type { AgenSpaceEvent } from "../types/events";
 import type { Suggestion } from "../types/suggestions";
 
 export interface DashboardSummary {
@@ -10,7 +10,7 @@ export interface DashboardSummary {
   tasks_completed: number;
   today_tasks: Task[];
   overdue_tasks: Task[];
-  upcoming_events: KoswayEvent[];
+  upcoming_events: AgenSpaceEvent[];
   pending_suggestions: Suggestion[];
 }
 

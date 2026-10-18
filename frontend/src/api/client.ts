@@ -25,6 +25,13 @@ export const API_BASE_URL = getApiBaseUrl();
 let inMemoryAccessToken: string | null = null;
 let activeRefreshPromise: Promise<TokenResponse> | null = null;
 
+async function parseResponseBody<T>(response: Response): Promise<T> {
+  if (response.status === 204 || response.status === 205) {
+    return undefined as T;
+  }
+  return (await response.json()) as T;
+}
+
 export function setAccessToken(token: string | null): void {
   inMemoryAccessToken = token;
 }
@@ -138,7 +145,7 @@ export async function apiRequest<T>(
       throw new ApiRequestError(retryRes.status, detail);
     }
 
-    return (await retryRes.json()) as T;
+    return parseResponseBody<T>(retryRes);
   }
 
   if (!response.ok) {
@@ -152,5 +159,5 @@ export async function apiRequest<T>(
     throw new ApiRequestError(response.status, detail);
   }
 
-  return response.json() as Promise<T>;
+  return parseResponseBody<T>(response);
 }

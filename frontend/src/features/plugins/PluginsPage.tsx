@@ -19,10 +19,10 @@ import {
   Zap,
 } from "lucide-react";
 import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { fetchPlugins, installPlugin, uninstallPlugin } from "../api/plugins";
-import { useToast } from "../context/ToastContext";
-import { PLUGIN_CATEGORIES, STATIC_PLUGIN_CATALOG } from "../services/pluginCatalog";
-import type { PluginCategory, PluginListing } from "../types/plugins";
+import { fetchPlugins, installPlugin, uninstallPlugin } from "./api";
+import { useToast } from "../../context/ToastContext";
+import { PLUGIN_CATEGORIES, STATIC_PLUGIN_CATALOG } from "./catalog";
+import type { PluginCategory, PluginListing } from "./types";
 
 const PluginIcon: React.FC<{ iconName: string; size?: number; strokeWidth?: number }> = ({
   iconName,
@@ -188,7 +188,7 @@ const PluginDetailModal: React.FC<PluginDetailModalProps> = ({
           <section className="plugin-modal-section">
             <h3>Supported Capabilities</h3>
             <p className="section-helper">
-              Once connected, Moon and Kosway workflows will be authorized to perform these actions:
+              Once connected, Moon and AgenSpace workflows will be authorized to perform these actions:
             </p>
             <ul className="capabilities-checklist">
               {plugin.capabilities.map((cap) => (
@@ -209,7 +209,7 @@ const PluginDetailModal: React.FC<PluginDetailModalProps> = ({
               </span>
             </div>
             <p className="section-helper">
-              Kosway uses minimal required scopes. Consent will be requested during provider authorization.
+              AgenSpace uses minimal required scopes. Consent will be requested during provider authorization.
             </p>
             <div className="permissions-table">
               {plugin.permissions.map((perm) => (
@@ -412,7 +412,7 @@ export const PluginsPage: React.FC = () => {
             <h2>First-Class Integration Architecture</h2>
           </div>
           <p className="trust-lead">
-            Kosway provides official connectors designed for privacy, explicit user consent, and future integration with Moon, your AI productivity companion.
+            AgenSpace provides official connectors designed for privacy, explicit user consent, and future integration with Moon, your AI productivity companion.
           </p>
         </div>
         <div className="trust-columns">

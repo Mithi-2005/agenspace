@@ -1,22 +1,14 @@
-import { apiRequest } from "./client";
-import type { GoogleConnectionStatus, GoogleSyncResult } from "../types/integrations";
+import { apiRequest } from "../../api/client";
+import type { GmailSyncResult } from "./types";
 
-export async function getGoogleStatusApi(): Promise<GoogleConnectionStatus> {
-  return apiRequest<GoogleConnectionStatus>("/api/v1/integrations/google/status");
-}
-
-export async function getGoogleAuthorizeUrlApi(): Promise<{ authorization_url: string }> {
-  return apiRequest<{ authorization_url: string }>("/api/v1/integrations/google/authorize");
-}
-
-export async function triggerGoogleSyncApi(): Promise<GoogleSyncResult> {
-  return apiRequest<GoogleSyncResult>("/api/v1/integrations/google/sync", {
+export async function triggerGmailSyncApi(): Promise<GmailSyncResult> {
+  return apiRequest<GmailSyncResult>("/api/v1/integrations/google/sync", {
     method: "POST",
   });
 }
 
-export async function retryGoogleFailuresApi(): Promise<GoogleSyncResult> {
-  return apiRequest<GoogleSyncResult>("/api/v1/integrations/google/retry-failed", {
+export async function retryGmailFailuresApi(): Promise<GmailSyncResult> {
+  return apiRequest<GmailSyncResult>("/api/v1/integrations/google/retry-failed", {
     method: "POST",
   });
 }
@@ -55,10 +47,4 @@ export async function permanentlyDeleteGmailMessageApi(
     `/api/v1/integrations/google/messages/${encodeURIComponent(messageId)}/permanently`,
     { method: "DELETE", body: JSON.stringify({ confirmation_phrase: confirmationPhrase }) },
   );
-}
-
-export async function disconnectGoogleApi(): Promise<{ status: string }> {
-  return apiRequest<{ status: string }>("/api/v1/integrations/google/disconnect", {
-    method: "DELETE",
-  });
 }

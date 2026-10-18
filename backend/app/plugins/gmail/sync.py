@@ -24,14 +24,14 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.integrations.crypto import encrypt_token
 from app.integrations.google.client import GoogleOAuthError, refresh_access_token
-from app.integrations.google.suggestions import persist_extraction
 from app.models.external_account import ExternalAccount, ExternalAccountStatus
 from app.models.integration import GmailMessage, IntegrationSyncState
 from app.models.user import User
+from app.plugins.gmail.intelligence import GmailIntelligenceError, GmailIntelligenceService
+from app.plugins.gmail.suggestions import persist_extraction
 from app.services.external_account_service import get_decrypted_tokens
-from app.services.gmail_intelligence_service import GmailIntelligenceError, GmailIntelligenceService
 
-logger = logging.getLogger("kosway.integrations.google.sync")
+logger = logging.getLogger("agenspace.plugins.gmail.sync")
 
 GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me"
 DEFAULT_BATCH_SIZE = 20

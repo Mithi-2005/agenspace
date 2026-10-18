@@ -12,12 +12,3 @@ class GoogleConnectionStatusResponse(BaseModel):
     last_sync_status: str | None = None
     last_error_message: str | None = None
     reauthorization_required: bool = False
-
-
-class GoogleSyncResponse(BaseModel):
-    status: str
-    messages_synced: int
-    suggestions_created: int
-    extraction_failures: int = 0
-    fetch_failures: int = 0
-    last_synced_at: str | None = None

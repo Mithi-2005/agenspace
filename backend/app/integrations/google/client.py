@@ -1,5 +1,5 @@
 """
-Google OAuth 2.0 API client for Kosway.
+Google OAuth 2.0 API client for AgenSpace.
 
 Handles authorization URL generation, server-side code exchange, Google identity
 retrieval (using stable `sub`), and token refresh using standard Google endpoints.
@@ -18,7 +18,7 @@ import httpx
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("kosway.integrations.google.client")
+logger = logging.getLogger("agenspace.integrations.google.client")
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"

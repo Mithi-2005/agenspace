@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getConnectionCatalog } from "../services/connectionService";
+import { getConnectionCatalog } from "../features/connections/catalog";
 
 describe("connection catalog", () => {
   it("exposes intended providers without marking them connected", () => {

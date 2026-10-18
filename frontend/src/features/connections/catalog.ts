@@ -1,11 +1,11 @@
-import type { ConnectionCatalog, ConnectionProvider } from "../types/connections";
+import type { ConnectionCatalog, ConnectionProvider } from "./types";
 
 export const CONNECTION_PROVIDERS: ConnectionProvider[] = [
   {
     id: "gmail",
     name: "Gmail",
     description:
-      "Authorize Gmail so Kosway can later surface messages that may contain events or follow-ups. Nothing is scanned until an official connection exists.",
+      "Authorize Gmail so AgenSpace can later surface messages that may contain events or follow-ups. Nothing is scanned until an official connection exists.",
     category: "mail",
     status: "not_implemented",
     enables: ["Suggested follow-ups", "Detected events from mail"],

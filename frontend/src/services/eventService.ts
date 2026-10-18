@@ -1,7 +1,7 @@
-import type { KoswayEvent } from "../types/events";
+import type { AgenSpaceEvent } from "../types/events";
 
 export interface EventQueryResult {
-  events: KoswayEvent[];
+  events: AgenSpaceEvent[];
   available: boolean;
   reason?: string;
 }

@@ -12,14 +12,16 @@ import {
   disconnectGoogleApi,
   getGoogleAuthorizeUrlApi,
   getGoogleStatusApi,
-  retryGoogleFailuresApi,
+} from "../features/google/api";
+import {
+  retryGmailFailuresApi,
   sendGmailMessageApi,
-  triggerGoogleSyncApi,
-} from "../api/integrations";
+  triggerGmailSyncApi,
+} from "../features/gmail/api";
 import { formatDateTime } from "../lib/format";
-import { getConnectionCatalog } from "../services/connectionService";
-import type { ConnectionProvider } from "../types/connections";
-import type { GoogleConnectionStatus } from "../types/integrations";
+import { getConnectionCatalog } from "../features/connections/catalog";
+import type { ConnectionProvider } from "../features/connections/types";
+import type { GoogleConnectionStatus } from "../features/google/types";
 
 function ProviderMark({ provider }: { provider: ConnectionProvider }) {
   const Icon = provider.category === "mail" ? Mail : CalendarDays;
@@ -107,7 +109,7 @@ export const ConnectionsPage: React.FC = () => {
     try {
       setIsSyncing(true);
       setMessage(null);
-      const res = await triggerGoogleSyncApi();
+      const res = await triggerGmailSyncApi();
       await fetchStatus();
       setMessage({
         type: res.status === "partial" ? "error" : "success",
@@ -130,7 +132,7 @@ export const ConnectionsPage: React.FC = () => {
     try {
       setIsSyncing(true);
       setMessage(null);
-      const result = await retryGoogleFailuresApi();
+      const result = await retryGmailFailuresApi();
       await fetchStatus();
       setMessage({
         type: result.status === "partial" ? "error" : "success",
@@ -212,7 +214,7 @@ export const ConnectionsPage: React.FC = () => {
       )}
 
       <section className="panel trust-panel">
-        <h2>How connections work in Kosway</h2>
+        <h2>How connections work in AgenSpace</h2>
         <ul>
           <li>Gmail permissions include reading, sending, and changing messages. Permanent deletion requires Google's broad full-mail permission, which requires additional OAuth review and may require security assessment. Every send or destructive action needs its own confirmation.</li>
           <li>Imported suggestions stay in Needs review on your dashboard until you accept or dismiss them.</li>

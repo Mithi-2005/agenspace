@@ -31,7 +31,7 @@ class ExternalAccountStatus(str, enum.Enum):
 class ExternalAccount(Base):
     """
     Stores credentials and metadata for external provider accounts (e.g. Google/Gmail)
-    connected to a Kosway user.
+    connected to an AgenSpace user.
 
     Security constraints:
       • OAuth access and refresh tokens are encrypted at rest using Fernet before insertion.

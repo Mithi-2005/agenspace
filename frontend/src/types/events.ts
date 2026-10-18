@@ -1,7 +1,7 @@
 export type EventSource = "user" | "imported" | "suggested" | "confirmed";
 
 /** Event as returned by the server API */
-export interface KoswayEvent {
+export interface AgenSpaceEvent {
   id: string;
   title: string;
   description: string | null;
@@ -36,6 +36,6 @@ export interface EventUpdate {
 }
 
 export interface EventListResponse {
-  items: KoswayEvent[];
+  items: AgenSpaceEvent[];
   total: number;
 }

@@ -3,8 +3,8 @@ import {
   disconnectGoogleApi,
   getGoogleAuthorizeUrlApi,
   getGoogleStatusApi,
-  triggerGoogleSyncApi,
-} from "../api/integrations";
+} from "../features/google/api";
+import { triggerGmailSyncApi } from "../features/gmail/api";
 import {
   acceptSuggestionApi,
   dismissSuggestionApi,
@@ -54,7 +54,7 @@ describe("integrations API client", () => {
     expect(result.authorization_url).toContain("https://accounts.google.com");
   });
 
-  it("triggerGoogleSyncApi reports sync count and suggestions created", async () => {
+  it("triggerGmailSyncApi reports sync count and suggestions created", async () => {
     const mockSyncRes = {
       status: "success",
       messages_synced: 5,
@@ -68,7 +68,7 @@ describe("integrations API client", () => {
       json: async () => mockSyncRes,
     });
 
-    const result = await triggerGoogleSyncApi();
+    const result = await triggerGmailSyncApi();
     expect(result.status).toBe("success");
     expect(result.messages_synced).toBe(5);
     expect(result.suggestions_created).toBe(2);

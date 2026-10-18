@@ -11,13 +11,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.security import hash_password
-from app.integrations.google.suggestions import dismiss_suggestion
-from app.integrations.google.sync import sync_gmail_for_account
 from app.models.external_account import ExternalAccount
 from app.models.integration import GmailMessage, IntegrationSyncState, Suggestion
 from app.models.user import User
+from app.plugins.gmail.intelligence import GmailExtraction, GmailIntelligenceError
+from app.plugins.gmail.suggestions import dismiss_suggestion
+from app.plugins.gmail.sync import sync_gmail_for_account
 from app.services.external_account_service import upsert_external_account
-from app.services.gmail_intelligence_service import GmailExtraction, GmailIntelligenceError
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +32,7 @@ def setup_settings(monkeypatch: pytest.MonkeyPatch) -> None:
         XAI_API_KEY=SecretStr("test-xai-key"),
     )
     monkeypatch.setattr("app.core.config.get_settings", lambda: test_settings)
-    monkeypatch.setattr("app.integrations.google.sync.get_settings", lambda: test_settings)
+    monkeypatch.setattr("app.plugins.gmail.sync.get_settings", lambda: test_settings)
     monkeypatch.setattr("app.integrations.google.client.get_settings", lambda: test_settings)
     monkeypatch.setattr("app.integrations.crypto.get_settings", lambda: test_settings)
 
@@ -171,7 +171,7 @@ def test_trigger_sync_success_with_mocked_gmail(client: TestClient, db_session: 
     with (
         patch("httpx.Client.get", side_effect=mock_get),
         patch(
-            "app.services.gmail_intelligence_service.GmailIntelligenceService.extract",
+            "app.plugins.gmail.intelligence.GmailIntelligenceService.extract",
             side_effect=[
                 GmailExtraction(
                     suggestions=[
@@ -283,7 +283,7 @@ def test_sync_idempotency_prevents_duplicate_messages(
     with (
         patch("httpx.Client.get", side_effect=mock_get),
         patch(
-            "app.services.gmail_intelligence_service.GmailIntelligenceService.extract",
+            "app.plugins.gmail.intelligence.GmailIntelligenceService.extract",
             return_value=extracted,
         ) as extract,
     ):
@@ -350,7 +350,7 @@ def test_sync_paginates_until_requested_bounded_batch_is_fetched(
     with (
         patch("httpx.Client.get", side_effect=mock_get),
         patch(
-            "app.services.gmail_intelligence_service.GmailIntelligenceService.extract",
+            "app.plugins.gmail.intelligence.GmailIntelligenceService.extract",
             return_value=GmailExtraction(suggestions=[]),
         ),
     ):
@@ -374,8 +374,8 @@ def test_gmail_detail_failure_is_reported_as_partial_sync(
     server_error.json.return_value = {"error": {"message": "temporary"}}
     with (
         patch("httpx.Client.get", side_effect=[list_response, server_error, server_error, server_error, server_error]),
-        patch("app.integrations.google.sync.time.sleep"),
-        patch("app.integrations.google.sync.random.uniform", return_value=0),
+        patch("app.plugins.gmail.sync.time.sleep"),
+        patch("app.plugins.gmail.sync.random.uniform", return_value=0),
     ):
         response = client.post("/api/v1/integrations/google/sync", headers=headers)
     assert response.status_code == 200
@@ -402,7 +402,7 @@ def test_failed_extraction_can_be_retried_explicitly(client: TestClient, db_sess
     with (
         patch("httpx.Client.get", side_effect=[listed, detail, listed, detail]),
         patch(
-            "app.services.gmail_intelligence_service.GmailIntelligenceService.extract",
+            "app.plugins.gmail.intelligence.GmailIntelligenceService.extract",
             side_effect=[
                 GmailIntelligenceError("Invalid structured output", retryable=False),
                 GmailExtraction(suggestions=[]),
@@ -446,7 +446,7 @@ def test_transient_grok_failure_keeps_google_connected_and_retries(
     with (
         patch("httpx.Client.get", side_effect=mock_get),
         patch(
-            "app.services.gmail_intelligence_service.GmailIntelligenceService.extract",
+            "app.plugins.gmail.intelligence.GmailIntelligenceService.extract",
             side_effect=[
                 GmailIntelligenceError("Temporary provider failure", retryable=True),
                 GmailExtraction(suggestions=[]),

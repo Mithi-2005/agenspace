@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { STATIC_PLUGIN_CATALOG } from "../services/pluginCatalog";
-import type { PluginCategory, PluginListing } from "../types/plugins";
+import { STATIC_PLUGIN_CATALOG } from "../features/plugins/catalog";
+import type { PluginCategory, PluginListing } from "../features/plugins/types";
 
 function filterCatalogue(
   catalog: PluginListing[],

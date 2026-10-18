@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.event import Event, EventSource
 from app.models.integration import GmailMessage, Suggestion, SuggestionStatus, SuggestionType
 from app.models.task import Task, TaskPriority, TaskSource, TaskStatus
-from app.services.gmail_intelligence_service import GmailExtraction
+from app.plugins.gmail.intelligence import GmailExtraction
 
 
 class SuggestionError(Exception):

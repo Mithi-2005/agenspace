@@ -54,7 +54,7 @@ def _connect_user(client: TestClient, db: Session) -> tuple[dict[str, str], obje
 
 def test_send_requires_user_confirmation(client: TestClient, db_session: Session) -> None:
     headers, _account = _connect_user(client, db_session)
-    with patch("app.integrations.google.mail_actions._request") as request:
+    with patch("app.plugins.gmail.actions._request") as request:
         response = client.post(
             "/api/v1/integrations/google/messages/send",
             headers=headers,
@@ -68,7 +68,7 @@ def test_trash_requires_exact_message_id_confirmation(
     client: TestClient, db_session: Session
 ) -> None:
     headers, _account = _connect_user(client, db_session)
-    with patch("app.integrations.google.mail_actions._request") as request:
+    with patch("app.plugins.gmail.actions._request") as request:
         response = client.post(
             "/api/v1/integrations/google/messages/msg_123/trash",
             headers=headers,
@@ -84,7 +84,7 @@ def test_message_action_confirms_ownership_before_mutating(
     headers, _account = _connect_user(client, db_session)
     missing = MagicMock(status_code=404)
     with (
-        patch("app.integrations.google.mail_actions._request", return_value=missing) as request,
+        patch("app.plugins.gmail.actions._request", return_value=missing) as request,
     ):
         response = client.post(
             "/api/v1/integrations/google/messages/msg_123/archive",
@@ -99,7 +99,7 @@ def test_permanent_delete_requires_exact_unmistakable_confirmation(
     client: TestClient, db_session: Session
 ) -> None:
     headers, _account = _connect_user(client, db_session)
-    with patch("app.integrations.google.mail_actions._request") as request:
+    with patch("app.plugins.gmail.actions._request") as request:
         bad = client.request(
             "DELETE",
             "/api/v1/integrations/google/messages/msg_123/permanently",
@@ -112,7 +112,7 @@ def test_permanent_delete_requires_exact_unmistakable_confirmation(
     found = MagicMock(status_code=200)
     deleted = MagicMock(status_code=204)
     with (
-        patch("app.integrations.google.mail_actions._request", side_effect=[found, deleted]) as request,
+        patch("app.plugins.gmail.actions._request", side_effect=[found, deleted]) as request,
     ):
         good = client.request(
             "DELETE",

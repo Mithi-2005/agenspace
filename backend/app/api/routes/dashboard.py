@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.integrations.google.suggestions import list_pending_suggestions
 from app.models.event import Event
 from app.models.task import Task, TaskStatus
 from app.models.user import User
+from app.plugins.gmail.suggestions import list_pending_suggestions
 from app.schemas.event import EventResponse
 from app.schemas.suggestion import SuggestionResponse
 from app.schemas.task import TaskResponse

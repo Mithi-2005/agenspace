@@ -15,8 +15,9 @@ from app.api.routes.suggestions import router as suggestions_router
 from app.api.routes.tasks import router as tasks_router
 from app.api.routes.users import router as users_router
 from app.core.config import get_settings
+from app.plugins.gmail.routes import router as gmail_router
 
-logger = logging.getLogger("kosway.api")
+logger = logging.getLogger("agenspace.api")
 
 settings = get_settings()
 logging.basicConfig(level=settings.log_level)
@@ -45,7 +46,12 @@ app.include_router(plugins_router, prefix=f"{settings.api_v1_prefix}/plugins", t
 app.include_router(
     integrations_google_router,
     prefix=f"{settings.api_v1_prefix}/integrations/google",
-    tags=["integrations-google"],
+    tags=["google-connection"],
+)
+app.include_router(
+    gmail_router,
+    prefix=f"{settings.api_v1_prefix}/integrations/google",
+    tags=["plugin-gmail"],
 )
 app.include_router(
     suggestions_router,

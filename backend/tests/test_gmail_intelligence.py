@@ -8,12 +8,12 @@ import pytest
 from pydantic import SecretStr
 
 from app.core.config import Settings
-from app.integrations.google.sync import _gmail_body_text
-from app.services.gmail_intelligence_service import (
+from app.plugins.gmail.intelligence import (
     GmailIntelligenceError,
     GmailIntelligenceService,
     _retry_after,
 )
+from app.plugins.gmail.sync import _gmail_body_text
 
 
 def _settings() -> Settings:
@@ -45,7 +45,7 @@ def _response(suggestions: list[dict]) -> MagicMock:
 
 
 def test_unactionable_email_returns_empty_list(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     with patch("httpx.Client.post", return_value=_response([])):
         result = GmailIntelligenceService().extract(
             subject="Monthly update",
@@ -59,7 +59,7 @@ def test_unactionable_email_returns_empty_list(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_clear_task_is_returned_with_supported_fields(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     output = [
         {
             "type": "task",
@@ -95,7 +95,7 @@ def test_clear_task_is_returned_with_supported_fields(monkeypatch: pytest.Monkey
 def test_multiple_actions_and_ambiguous_deadline_are_preserved(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     output = [
         {
             "type": "task",
@@ -143,7 +143,7 @@ def test_unconfigured_blank_key_is_explicit_and_does_not_call_provider(
     settings = Settings(
         database_url="sqlite://", AI_PROVIDER="gemini", GEMINI_API_KEY=SecretStr(" ")
     )
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", lambda: settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", lambda: settings)
     with patch("httpx.Client.post") as post, pytest.raises(GmailIntelligenceError) as exc:
         GmailIntelligenceService().extract(
             subject="x",
@@ -159,7 +159,7 @@ def test_unconfigured_blank_key_is_explicit_and_does_not_call_provider(
 
 
 def test_gemini_provider_uses_configured_model_and_schema(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _gemini_settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _gemini_settings)
     response = MagicMock(status_code=200, headers={})
     response.json.return_value = {
         "candidates": [
@@ -198,7 +198,7 @@ def test_gemini_provider_uses_configured_model_and_schema(monkeypatch: pytest.Mo
 def test_gemini_http_400_is_non_retryable_and_logs_sanitized_error(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _gemini_settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _gemini_settings)
     response = MagicMock(status_code=400, headers={})
     response.json.return_value = {
         "error": {
@@ -230,7 +230,7 @@ def test_gemini_http_400_is_non_retryable_and_logs_sanitized_error(
 def test_gemini_http_429_retries_then_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = _gemini_settings()
     settings.ai_max_retries = 1
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", lambda: settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", lambda: settings)
     limited = MagicMock(status_code=429, headers={"Retry-After": "0"})
     limited.json.return_value = {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED"}}
     success = MagicMock(status_code=200, headers={})
@@ -239,7 +239,7 @@ def test_gemini_http_429_retries_then_succeeds(monkeypatch: pytest.MonkeyPatch) 
     }
     with (
         patch("httpx.Client.post", side_effect=[limited, success]) as post,
-        patch("app.services.gmail_intelligence_service.time.sleep"),
+        patch("app.plugins.gmail.intelligence.time.sleep"),
     ):
         result = GmailIntelligenceService().extract(
             subject="x",
@@ -266,7 +266,7 @@ def test_gemini_http_429_retries_then_succeeds(monkeypatch: pytest.MonkeyPatch) 
 def test_gemini_malformed_or_empty_output_is_non_retryable(
     monkeypatch: pytest.MonkeyPatch, payload: dict
 ) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _gemini_settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _gemini_settings)
     response = MagicMock(status_code=200, headers={})
     response.json.return_value = payload
     with (
@@ -300,7 +300,7 @@ def test_retry_after_accepts_http_date() -> None:
 
 
 def test_three_pm_event_retains_user_timezone(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     output = [
         {
             "type": "event",
@@ -337,7 +337,7 @@ def test_three_pm_event_retains_user_timezone(monkeypatch: pytest.MonkeyPatch) -
 def test_naive_event_time_uses_user_timezone_and_crosses_midnight_correctly(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     output = [
         {
             "type": "event",
@@ -367,7 +367,7 @@ def test_naive_event_time_uses_user_timezone_and_crosses_midnight_correctly(
 def test_all_day_event_is_normalized_to_local_midnight_bounds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     output = [
         {
             "type": "event",
@@ -409,7 +409,7 @@ def test_multipart_prefers_plain_text_and_html_fallback() -> None:
 
 
 def test_authentication_failure_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     response = MagicMock(status_code=401, headers={})
     with (
         patch("httpx.Client.post", return_value=response) as post,
@@ -430,7 +430,7 @@ def test_authentication_failure_is_not_retried(monkeypatch: pytest.MonkeyPatch) 
 def test_gemini_authentication_failure_is_not_retried(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _gemini_settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _gemini_settings)
     response = MagicMock(status_code=403, headers={})
     with (
         patch("httpx.Client.post", return_value=response) as post,
@@ -449,7 +449,7 @@ def test_gemini_authentication_failure_is_not_retried(
 
 
 def test_malformed_model_output_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     response = MagicMock(status_code=200, headers={})
     response.json.return_value = {"choices": [{"message": {"content": "not json"}}]}
     with (
@@ -468,10 +468,10 @@ def test_malformed_model_output_is_rejected(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_timeout_retries_are_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", _settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", _settings)
     with (
         patch("httpx.Client.post", side_effect=httpx.TimeoutException("timeout")) as post,
-        patch("app.services.gmail_intelligence_service.time.sleep"),
+        patch("app.plugins.gmail.intelligence.time.sleep"),
         pytest.raises(GmailIntelligenceError) as exc,
     ):
         GmailIntelligenceService().extract(
@@ -489,11 +489,11 @@ def test_timeout_retries_are_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_retry_after_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = _settings()
     settings.xai_max_retries = 1
-    monkeypatch.setattr("app.services.gmail_intelligence_service.get_settings", lambda: settings)
+    monkeypatch.setattr("app.plugins.gmail.intelligence.get_settings", lambda: settings)
     limited = MagicMock(status_code=429, headers={"Retry-After": "0"})
     with (
         patch("httpx.Client.post", side_effect=[limited, _response([])]) as post,
-        patch("app.services.gmail_intelligence_service.time.sleep"),
+        patch("app.plugins.gmail.intelligence.time.sleep"),
     ):
         result = GmailIntelligenceService().extract(
             subject="x",

@@ -1,5 +1,5 @@
 """
-Credential encryption utility for Kosway integrations.
+Credential encryption utility for AgenSpace integrations.
 
 This module provides two functions — ``encrypt_token`` and ``decrypt_token`` —
 that wrap Fernet symmetric encryption for safe at-rest storage of OAuth access
@@ -44,7 +44,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("kosway.integrations.crypto")
+logger = logging.getLogger("agenspace.integrations.crypto")
 
 # ---------------------------------------------------------------------------
 # Public API

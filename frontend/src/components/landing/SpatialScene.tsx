@@ -69,7 +69,7 @@ export const SpatialScene: React.FC<SpatialSceneProps> = ({ progress }) => {
 
         <div className="spatial-chamber">
           <div className="chamber-frame">
-            <span className="chamber-label">Kosway chamber</span>
+            <span className="chamber-label">AgenSpace chamber</span>
             <div className="chamber-grid">
               <b />
               <b />

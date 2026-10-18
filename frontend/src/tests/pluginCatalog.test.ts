@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLUGIN_CATEGORIES, STATIC_PLUGIN_CATALOG } from "../services/pluginCatalog";
+import { PLUGIN_CATEGORIES, STATIC_PLUGIN_CATALOG } from "../features/plugins/catalog";
 
 describe("Plugins Marketplace Catalog", () => {
   it("contains all required initial catalogue entries", () => {

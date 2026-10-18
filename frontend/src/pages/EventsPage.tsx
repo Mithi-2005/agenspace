@@ -7,7 +7,7 @@ import {
   toDateLocalValue,
   toDatetimeLocalValue,
 } from "../lib/format";
-import type { KoswayEvent, EventCreate, EventUpdate } from "../types/events";
+import type { AgenSpaceEvent, EventCreate, EventUpdate } from "../types/events";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Dialog } from "../components/ui/Dialog";
@@ -17,17 +17,17 @@ import { useAuth } from "../context/useAuth";
 
 export const EventsPage: React.FC = () => {
   const toast = useToast();
-  const [events, setEvents] = useState<KoswayEvent[]>([]);
+  const [events, setEvents] = useState<AgenSpaceEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<KoswayEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<AgenSpaceEvent | null>(null);
 
   // Delete confirmation state
-  const [eventToDelete, setEventToDelete] = useState<KoswayEvent | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<AgenSpaceEvent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -53,12 +53,12 @@ export const EventsPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleOpenEdit = (event: KoswayEvent) => {
+  const handleOpenEdit = (event: AgenSpaceEvent) => {
     setEditingEvent(event);
     setModalOpen(true);
   };
 
-  const handleSaved = (saved: KoswayEvent) => {
+  const handleSaved = (saved: AgenSpaceEvent) => {
     if (editingEvent) {
       setEvents((prev) =>
         prev
@@ -193,7 +193,7 @@ export const EventsPage: React.FC = () => {
 };
 
 interface EventRowProps {
-  event: KoswayEvent;
+  event: AgenSpaceEvent;
   past?: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -263,9 +263,9 @@ const EventRow: React.FC<EventRowProps> = ({ event, past, onEdit, onDelete }) =>
 
 interface EventModalProps {
   open: boolean;
-  initialEvent: KoswayEvent | null;
+  initialEvent: AgenSpaceEvent | null;
   onClose: () => void;
-  onSaved: (event: KoswayEvent) => void;
+  onSaved: (event: AgenSpaceEvent) => void;
 }
 
 const EventModal: React.FC<EventModalProps> = ({ open, initialEvent, onClose, onSaved }) => {

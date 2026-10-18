@@ -1,15 +1,15 @@
-# Kosway
-Kosway is a multi-user AI productivity and automation platform. Moon is the in-app AI assistant.
+# AgenSpace
+AgenSpace is a multi-user AI productivity and automation platform. Moon is the in-app AI assistant.
 
 ## Centralized branding & Configuration
 Copy `.env.example` to `.env` in the project root. Configure your local settings:
 ```env
-APP_NAME=Kosway
+APP_NAME=AgenSpace
 AI_ASSISTANT_NAME=Moon
-BRAND_LOGO_URL=/brand/kosway-mark.svg
-VITE_APP_NAME=Kosway
+BRAND_LOGO_URL=/brand/agenspace-mark.svg
+VITE_APP_NAME=AgenSpace
 VITE_AI_ASSISTANT_NAME=Moon
-VITE_BRAND_LOGO_URL=/brand/kosway-mark.svg
+VITE_BRAND_LOGO_URL=/brand/agenspace-mark.svg
 VITE_API_BASE_URL=http://127.0.0.1:8000
 APP_ENV=development
 API_V1_PREFIX=/api/v1
@@ -34,7 +34,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 Python 3.11+, Node.js 20+, Docker Desktop, and optionally pgAdmin.
 
 ## Identity & Authentication Architecture (Phase 1)
-Kosway implements an end-to-end, multi-user identity and security system:
+AgenSpace implements an end-to-end, multi-user identity and security system:
 - **Password Security**: Passwords hashed with **Argon2id** (RFC 9106 parameters).
 - **Access Tokens**: Short-lived JWTs (default: 15 minutes) signed with HS256, verified for signature, expiry, issuer, audience, and subject UUID. Access tokens are held **strictly in-memory** in the frontend client (never stored in localStorage).
 - **Refresh Tokens & Sessions**: Cryptographically random opaque tokens stored as SHA-256 hashes in PostgreSQL (`refresh_token_sessions` table). Delivered to browsers via **HttpOnly**, `SameSite=lax`, restricted-path (`/api/v1/auth`) cookies.
@@ -107,7 +107,7 @@ npm.cmd run dev     # Development server (http://localhost:5173)
 1. Start backend: `conda run -n agent_desk python -m uvicorn app.main:app --port 8000`
 2. Start frontend: `npm.cmd run dev` in `frontend` directory.
 3. Open `http://localhost:5173` in a browser.
-4. Click "Create account", register with `user@example.com`, display name, and password. You will be authenticated into the Kosway workspace shell.
+4. Click "Create account", register with `user@example.com`, display name, and password. You will be authenticated into the AgenSpace workspace shell.
 5. In the topbar or sidebar, click "Account Settings". Update display name and verify immediate update.
 6. Test changing password under "Password security".
 7. Click "Sign out" and verify redirection to login. Log in with the new password.

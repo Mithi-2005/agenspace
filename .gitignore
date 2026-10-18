@@ -32,3 +32,6 @@ frontend/dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Keep project documentation local; do not track it in Git
+/docs/

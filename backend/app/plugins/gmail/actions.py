@@ -14,7 +14,7 @@ from app.integrations.google.client import GoogleOAuthError, refresh_access_toke
 from app.models.external_account import ExternalAccount
 from app.services.external_account_service import get_decrypted_tokens
 
-logger = logging.getLogger("kosway.integrations.google.mail_actions")
+logger = logging.getLogger("agenspace.plugins.gmail.actions")
 GMAIL_MESSAGES_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages"
 MESSAGE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,255}$")
 

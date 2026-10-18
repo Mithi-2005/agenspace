@@ -6,17 +6,17 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.plugin import (
-    InstalledPluginResponse,
-    PluginListing,
-    PluginListResponse,
-)
-from app.services.plugin_service import (
+from app.plugins.registry import (
     get_plugin,
     install_plugin,
     list_plugins,
     toggle_plugin,
     uninstall_plugin,
+)
+from app.schemas.plugin import (
+    InstalledPluginResponse,
+    PluginListing,
+    PluginListResponse,
 )
 
 router = APIRouter()

@@ -12,7 +12,7 @@ import { ConnectionsPage } from "./pages/ConnectionsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
-import { PluginsPage } from "./pages/PluginsPage";
+import { PluginsPage } from "./features/plugins";
 import { RegisterPage } from "./pages/RegisterPage";
 import { TasksPage } from "./pages/TasksPage";
 import { isWorkspaceRoute, navigateTo } from "./routing/hashRoute";

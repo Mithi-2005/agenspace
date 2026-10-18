@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("kosway.services.gmail_intelligence")
+logger = logging.getLogger("agenspace.services.gmail_intelligence")
 
 
 class MailSuggestion(BaseModel):

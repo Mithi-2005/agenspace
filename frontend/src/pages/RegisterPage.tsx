@@ -61,7 +61,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigateToLogin })
         </button>
         <div className="auth-brand-copy">
           <p className="eyebrow">New workspace</p>
-          <h1>Open a Kosway account.</h1>
+          <h1>Open an AgenSpace account.</h1>
           <p>
             Accounts are active after registration. Email delivery for verification is not configured
             in this environment, so the workspace does not wait on an inbox.
