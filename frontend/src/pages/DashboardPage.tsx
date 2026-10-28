@@ -7,13 +7,10 @@ import {
   Check,
   CheckCircle2,
   Clock,
-  Link2,
   ListTodo,
   Mail,
-  Moon,
   Plus,
   Sparkles,
-  UserRound,
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -25,7 +22,6 @@ import {
 } from "../features/gmail/api";
 import { acceptSuggestionApi, dismissSuggestionApi } from "../api/suggestions";
 import { TaskRow } from "../components/tasks/TaskRow";
-import { brandConfig } from "../config/brand";
 import { useAuth } from "../context/useAuth";
 import { useTasks } from "../context/useTasks";
 import { formatDateTime, formatLongDate, greetingForHour } from "../lib/format";
@@ -143,7 +139,6 @@ export const DashboardPage: React.FC = () => {
             {user?.display_name ? `, ${user.display_name.split(" ")[0]}` : ""}
           </h1>
         </div>
-        <p className="session-chip">Signed in</p>
       </header>
 
       {/* Stats row */}
@@ -194,16 +189,11 @@ export const DashboardPage: React.FC = () => {
       {/* Pending Suggestions (from Gmail) */}
       {(summary?.pending_suggestions ?? []).length > 0 && (
         <section
-          className="panel"
-          style={{
-            marginBottom: "20px",
-            border: "1px solid var(--color-border-subtle)",
-            background: "var(--color-surface-raised, rgba(255, 255, 255, 0.03))",
-          }}
+          className="panel suggestions-panel"
           aria-labelledby="suggestions-heading"
         >
-          <header className="panel-head" style={{ marginBottom: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <header className="panel-head suggestions-head">
+            <div className="suggestions-title">
               <span className="status-tag status-installed" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <Sparkles size={13} />
                 Needs review
@@ -450,33 +440,6 @@ export const DashboardPage: React.FC = () => {
         </aside>
       </div>
 
-      <nav className="quick-row" aria-label="Quick actions">
-        <button type="button" className="quick-action" onClick={() => openComposer()}>
-          <Plus size={16} />
-          Add task
-        </button>
-        <button type="button" className="quick-action" onClick={() => navigateTo("tasks")}>
-          <CalendarClock size={16} />
-          Open tasks
-        </button>
-        <button type="button" className="quick-action" onClick={() => navigateTo("events")}>
-          <Calendar size={16} />
-          Events
-        </button>
-        <button type="button" className="quick-action" onClick={() => navigateTo("connections")}>
-          <Link2 size={16} />
-          Connections
-        </button>
-        <button type="button" className="quick-action" onClick={() => navigateTo("account")}>
-          <UserRound size={16} />
-          Account
-        </button>
-      </nav>
-
-      <p className="moon-aside">
-        <Moon size={14} strokeWidth={1.75} aria-hidden="true" />
-        {brandConfig.assistantName} will join this workspace later. There is no assistant chat in this release.
-      </p>
     </div>
   );
 };

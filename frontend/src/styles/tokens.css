@@ -110,3 +110,6 @@
 ::selection {
   background: var(--selection);
 }
+
+.agenspace-shell { --as-page:#e6e6ea; --as-shell:#f4f4f6; --as-card:#fff; --as-ink:#16161a; --as-muted:#6b6b76; --as-muted-icon:#8b8b95; --as-line:#ececf0; --as-soft:#f3f3f6; --as-accent:#6657e8; --as-accent-2:#9a8dff; --as-success:#1f9d63; --as-success-bg:#e4f6ec; --as-danger:#d9463a; --as-danger-bg:#fdeae8; --as-strong:#16161a; --as-on-strong:#fff; font-family:"Inter Variable",Inter,system-ui,sans-serif; color:var(--as-ink); background:var(--as-page); min-height:100vh; padding:18px; transition:background-color 300ms,color 300ms; }
+:root[data-theme="dark"] .agenspace-shell { --as-page:#0c0c0e; --as-shell:#16161a; --as-card:#1e1e23; --as-ink:#f3f3f5; --as-muted:#9a9aa5; --as-muted-icon:#9a9aa5; --as-line:#2a2a30; --as-soft:#26262c; --as-success:#72d39b; --as-success-bg:#14301f; --as-danger:#ff8d83; --as-danger-bg:#3a1a17; --as-strong:#f3f3f5; --as-on-strong:#16161a; }

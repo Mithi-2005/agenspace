@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#171717" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#121312" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="%VITE_APP_NAME%" />
+    <meta property="og:description" content="Bring Gmail follow-ups, tasks, and events into one focused workspace. Review suggestions before they become commitments." />
+    <meta name="twitter:card" content="summary" />
     <meta name="description" content="%VITE_APP_NAME% — a considered workspace for tasks, events, and connected services." />
     <link rel="icon" type="image/svg+xml" href="%VITE_BRAND_LOGO_URL%" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,6 +31,8 @@
           document.documentElement.setAttribute("data-theme", theme);
           document.documentElement.setAttribute("data-theme-preference", pref);
           document.documentElement.style.colorScheme = theme;
+          var themeColor = document.querySelector('meta[name="theme-color"]');
+          if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#121312" : "#efe6d6");
         } catch (e) {
           document.documentElement.setAttribute("data-theme", "dark");
           document.documentElement.setAttribute("data-theme-preference", "system");

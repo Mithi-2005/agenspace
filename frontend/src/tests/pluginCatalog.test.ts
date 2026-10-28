@@ -29,9 +29,10 @@ describe("Plugins Marketplace Catalog", () => {
       expect(plugin.publisher.name).toBeTruthy();
       expect(typeof plugin.publisher.verified).toBe("boolean");
 
-      // Planned status
-      expect(plugin.status).toBe("planned");
-      expect(plugin.integration_status).toBe("planned");
+      // Only Gmail is a live integration; the rest remain catalogue entries.
+      const isAvailable = plugin.id === "gmail";
+      expect(plugin.status).toBe(isAvailable ? "available" : "planned");
+      expect(plugin.integration_status).toBe(isAvailable ? "available" : "planned");
 
       // Capabilities and permissions
       expect(plugin.capabilities.length).toBeGreaterThan(0);
@@ -50,7 +51,7 @@ describe("Plugins Marketplace Catalog", () => {
       expect(plugin.lifecycle.installation).toBe("not_installed");
       expect(plugin.lifecycle.connection).toBe("unavailable");
       expect(plugin.lifecycle.synchronization).toBe("never");
-      expect(plugin.lifecycle.runtime_capabilities).toBe("planned");
+      expect(plugin.lifecycle.runtime_capabilities).toBe(isAvailable ? "active" : "planned");
 
       // Initial state
       expect(plugin.is_installed).toBe(false);

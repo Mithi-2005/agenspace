@@ -5,6 +5,7 @@
 html {
   background: var(--bg);
   color: var(--text);
+  scroll-padding-top: 80px;
 }
 
 body {
@@ -19,6 +20,7 @@ body {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
 }
 
 #root {
@@ -40,6 +42,10 @@ textarea {
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 img {
@@ -87,8 +93,15 @@ ul {
 }
 
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus);
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+input,
+textarea,
+select {
+  min-width: 0;
 }
 
 .eyebrow {

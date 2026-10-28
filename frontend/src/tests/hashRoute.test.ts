@@ -7,24 +7,25 @@ describe("hash routing", () => {
     expect(parseHashRoute("#")).toBe("landing");
     expect(parseHashRoute("#login")).toBe("login");
     expect(parseHashRoute("#register")).toBe("register");
-    expect(parseHashRoute("#overview")).toBe("dashboard");
+    expect(parseHashRoute("#overview")).toBe("overview");
     expect(parseHashRoute("#myday")).toBe("tasks");
-    expect(parseHashRoute("#connections")).toBe("connections");
-    expect(parseHashRoute("#plugins")).toBe("plugins");
-    expect(parseHashRoute("#marketplace")).toBe("plugins");
-    expect(parseHashRoute("#integrations")).toBe("plugins");
+    expect(parseHashRoute("#connections")).toBe("manage");
+    expect(parseHashRoute("#plugins")).toBe("marketplace");
+    expect(parseHashRoute("#marketplace")).toBe("marketplace");
+    expect(parseHashRoute("#integrations")).toBe("marketplace");
     expect(parseHashRoute("#account")).toBe("account");
   });
 
-  it("treats unknown hashes as the public landing route", () => {
-    expect(parseHashRoute("#automations")).toBe("landing");
+  it("keeps new workspace routes deep-linkable and sends unknown hashes to the workspace 404", () => {
+    expect(parseHashRoute("#automations")).toBe("automations");
+    expect(parseHashRoute("#does-not-exist")).toBe("not-found");
   });
 
   it("round-trips workspace hashes", () => {
-    expect(routeToHash("dashboard")).toBe("#dashboard");
-    expect(routeToHash("plugins")).toBe("#plugins");
+    expect(routeToHash("overview")).toBe("#overview");
+    expect(routeToHash("marketplace")).toBe("#marketplace");
     expect(isWorkspaceRoute("tasks")).toBe(true);
-    expect(isWorkspaceRoute("plugins")).toBe(true);
+    expect(isWorkspaceRoute("marketplace")).toBe(true);
     expect(isWorkspaceRoute("login")).toBe(false);
   });
 });

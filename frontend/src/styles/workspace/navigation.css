@@ -1,0 +1,148 @@
+/* Align each persistent top-bar capsule while leaving its contents independently sized. */
+.as-topbar > .as-brand,
+.as-topbar > .as-utility,
+.as-topbar > .as-profile-wrap > .as-profile {
+  box-sizing: border-box;
+  height: 48px;
+}
+
+.as-topbar > .as-utility {
+  padding: 4px 5px;
+}
+
+.as-topbar > .as-utility button {
+  width: 38px;
+  height: 38px;
+}
+
+.as-section-nav-indicator {
+  display: none;
+}
+
+/* Single-line workspace navigation from tablet through desktop. */
+@media (min-width: 640px) and (max-width: 1199px) {
+  .as-topbar {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .as-brand {
+    flex: 0 0 auto;
+    padding-right: 5px;
+  }
+
+  .as-brand > span:last-child,
+  .as-profile-copy,
+  .as-profile > svg {
+    display: none;
+  }
+
+  .as-section-nav {
+    display: flex;
+    box-sizing: border-box;
+    flex: 0 1 auto;
+    grid-column: auto;
+    grid-row: auto;
+    width: fit-content;
+    height: 48px;
+    min-width: 0;
+    margin-inline: auto;
+    overflow-x: auto;
+  }
+
+  .as-section-nav button {
+    flex: 0 0 auto;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+
+  .as-utility {
+    grid-column: auto;
+    grid-row: auto;
+    flex: 0 0 auto;
+    justify-self: auto;
+  }
+
+  .as-profile-wrap {
+    grid-column: auto;
+    grid-row: auto;
+    flex: 0 0 auto;
+  }
+
+  .as-body {
+    height: calc(100% - 66px);
+    margin-top: 22px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .as-section-nav {
+    box-sizing: border-box;
+    flex: 0 1 auto;
+    width: fit-content;
+    height: 48px;
+    min-width: 0;
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 640px) {
+  .as-section-nav {
+    padding: 4px 5px;
+  }
+
+  .as-section-nav button {
+    position: relative;
+    z-index: 1;
+    min-height: 38px;
+  }
+
+  .as-section-nav.has-selection-indicator button.is-active {
+    background: transparent;
+  }
+
+  .as-section-nav-indicator {
+    display: block;
+    position: absolute;
+    z-index: 0;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    border-radius: 99px;
+    background: var(--as-strong);
+    pointer-events: none;
+    transition: transform 360ms cubic-bezier(.2,.8,.2,1), width 360ms cubic-bezier(.2,.8,.2,1);
+  }
+
+  .as-main-rail {
+    position: relative;
+  }
+
+  .as-main-rail .as-rail-button {
+    z-index: 1;
+    color: var(--as-ink);
+  }
+
+  .as-main-rail.has-selection-indicator .as-rail-button.is-active,
+  .as-main-rail.has-selection-indicator .as-rail-button.is-active:hover,
+  .as-main-rail.has-selection-indicator .as-rail-button.is-active:focus-visible {
+    background: transparent;
+    color: var(--as-on-strong);
+    transform: none;
+  }
+
+  .as-rail-selection-indicator {
+    position: absolute;
+    z-index: 0;
+    top: 9px;
+    left: 5px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--as-strong);
+    pointer-events: none;
+    transition: transform 360ms cubic-bezier(.2,.8,.2,1), height 360ms cubic-bezier(.2,.8,.2,1);
+  }
+}

@@ -45,13 +45,15 @@ def test_list_plugins_contains_core_catalogue(client: TestClient) -> None:
     for item in data["items"]:
         assert item["is_installed"] is False
         assert item["installed_at"] is None
-        assert item["status"] == "planned"
+        assert item["status"] == ("available" if item["id"] == "gmail" else "planned")
+        assert item["integration_status"] == ("available" if item["id"] == "gmail" else "planned")
         # Explicit distinction between listing, installation, connection, and sync
         assert item["lifecycle"]["listing"] == "available"
         assert item["lifecycle"]["installation"] == "not_installed"
         assert item["lifecycle"]["connection"] == "unavailable"
         assert item["lifecycle"]["synchronization"] == "never"
-        assert item["lifecycle"]["runtime_capabilities"] == "planned"
+        expected_runtime = "active" if item["id"] == "gmail" else "planned"
+        assert item["lifecycle"]["runtime_capabilities"] == expected_runtime
 
 
 def test_list_plugins_filter_category(client: TestClient) -> None:

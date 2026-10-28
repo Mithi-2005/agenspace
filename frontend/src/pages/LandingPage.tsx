@@ -43,7 +43,6 @@ export const LandingPage: React.FC = () => {
         <nav aria-label="Public">
           <a href="#landing-purpose">Purpose</a>
           <a href="#landing-preview">Workspace</a>
-          <a href="#landing-moon">Moon</a>
         </nav>
         <div className="landing-nav-actions">
           <ThemeControl compact />
@@ -59,15 +58,13 @@ export const LandingPage: React.FC = () => {
       <section ref={sequenceRef} className="landing-sequence" aria-label="AgenSpace spatial introduction">
         <div className="landing-sticky">
           <div className="landing-hero-copy">
-            <p className="eyebrow">Personal productivity environment</p>
             <h1>
               <span className="hero-brand">{brandConfig.appName}</span>
-              <span className="hero-line">Work arrives in pieces.</span>
-              <span className="hero-line accent">It should live in one place.</span>
             </h1>
+            <p className="hero-tagline">Work arrives in pieces. Keep it in one place.</p>
             <p className="hero-lead">
-              Mail, calendars, and handwritten todos rarely share a desk. {brandConfig.appName} is being
-              built as the chamber where those streams meet — without pretending they already do.
+              Bring tasks, events, and Gmail follow-ups into one focused workspace. Review suggestions
+              before they become commitments.
             </p>
             <div className="hero-actions">
               <button type="button" className="btn btn-lime" onClick={() => navigateTo("register")}>
@@ -91,31 +88,27 @@ export const LandingPage: React.FC = () => {
 
       <section id="landing-purpose" className="landing-section">
         <div className="landing-section-inner">
-          <p className="eyebrow">Positioning</p>
           <h2>A workspace for what you must do, what is coming, and what you choose to connect.</h2>
           <div className="purpose-grid">
             <article>
-              <span>01</span>
               <h3>Tasks you write</h3>
               <p>
-                Create and complete todos yourself. Persistence to the server is a later phase; the
-                workspace already treats tasks as first-class work, not decoration.
+                Create, prioritize, update, and complete tasks in your account. Your list stays yours
+                to shape.
               </p>
             </article>
             <article>
-              <span>02</span>
-              <h3>Events you can trust</h3>
+              <h3>Events in context</h3>
               <p>
-                Upcoming commitments will appear only from sources you authorize, with a clear origin —
-                never as guessed dates dressed up as a calendar.
+                Add events with dates, times, and locations, and review upcoming commitments alongside
+                your tasks.
               </p>
             </article>
             <article>
-              <span>03</span>
-              <h3>Connections you review</h3>
+              <h3>Gmail, in your review</h3>
               <p>
-                Gmail and calendars will connect through official authorization. Suggested actions stay
-                suggestions until you accept them.
+                Sync Gmail to find possible tasks and events. Accept or dismiss each suggestion before
+                it enters your workspace.
               </p>
             </article>
           </div>
@@ -124,13 +117,12 @@ export const LandingPage: React.FC = () => {
 
       <section id="landing-preview" className="landing-section landing-preview-section">
         <div className="landing-section-inner">
-          <p className="eyebrow">Product</p>
-          <h2>The workspace, not a marketing facsimile.</h2>
+          <h2>A clear view of what needs your attention.</h2>
           <p className="section-lead">
-            Compact navigation. Tasks, events, and reviewable suggestions as the primary surfaces.
-            Moon remains named, not performed.
+            This preview shows the empty states. Your tasks, events, and Gmail suggestions come from
+            your account after sign-in.
           </p>
-          <div className="product-frame" aria-hidden="true">
+          <div className="product-frame" aria-label="Workspace sections">
             <div className="product-chrome">
               <span />
               <span />
@@ -141,73 +133,26 @@ export const LandingPage: React.FC = () => {
               <div className="preview-col">
                 <header>
                   <strong>Upcoming</strong>
-                  <small>No calendar connected</small>
+                  <small>Your schedule</small>
                 </header>
-                <div className="preview-empty">Events appear after a calendar or mail source is authorized.</div>
+                <div className="preview-empty">Upcoming events appear here.</div>
               </div>
               <div className="preview-col is-primary">
                 <header>
                   <strong>Today</strong>
-                  <small>Your list</small>
+                  <small>Today</small>
                 </header>
-                <ul>
-                  <li>
-                    <b /> Draft the weekly note
-                    <i>Today</i>
-                  </li>
-                  <li>
-                    <b /> Confirm venue hold
-                    <i>Due 16:00</i>
-                  </li>
-                </ul>
+                <div className="preview-empty">Your tasks, with due dates and completion state.</div>
               </div>
               <div className="preview-col">
                 <header>
                   <strong>Suggested</strong>
                   <small>For review</small>
                 </header>
-                <div className="preview-empty">Detected items stay here until you accept or dismiss them.</div>
+                <div className="preview-empty">Possible tasks and events stay here until you accept or dismiss them.</div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="landing-section">
-        <div className="landing-section-inner split">
-          <div>
-            <p className="eyebrow">Tasks & events</p>
-            <h2>Manual work now. Connected work when the APIs exist.</h2>
-            <p>
-              You can already keep a session task list: title, notes, due time, priority, completion.
-              Events and extracted suggestions have typed front-end boundaries and honest empty states —
-              they do not invent meetings from thin air.
-            </p>
-          </div>
-          <div>
-            <p className="eyebrow">Connections</p>
-            <h2>Gmail and calendars, when authorization is real.</h2>
-            <p>
-              The Connections area names Gmail, Google Calendar, and Outlook Calendar as intended
-              sources. Each is marked unavailable until a backend integration can complete a genuine
-              OAuth flow.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section id="landing-moon" className="landing-section moon-section">
-        <div className="landing-section-inner">
-          <p className="eyebrow">Assistance</p>
-          <h2>
-            {brandConfig.assistantName} is the in-app assistant — named, scoped, and not yet in the
-            room.
-          </h2>
-          <p className="section-lead">
-            When it ships, {brandConfig.assistantName} is intended to help inspect suggestions, draft
-            follow-ups, and keep the workspace moving. It does not answer questions in this release, and
-            no chat surface is shown as if it did.
-          </p>
         </div>
       </section>
 
@@ -232,10 +177,7 @@ export const LandingPage: React.FC = () => {
 
       <footer className="landing-footer">
         <BrandLogo size={22} />
-        <p>
-          {brandConfig.appName} · Identity & session security in production · Tasks, events, and
-          connections are being assembled in the open.
-        </p>
+        <p>{brandConfig.appName} · Tasks, events, and Gmail suggestions in one workspace.</p>
       </footer>
     </div>
   );

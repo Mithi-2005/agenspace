@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  CalendarDays,
   CheckCircle2,
   ExternalLink,
   Mail,
@@ -19,21 +18,9 @@ import {
   triggerGmailSyncApi,
 } from "../features/gmail/api";
 import { formatDateTime } from "../lib/format";
-import { getConnectionCatalog } from "../features/connections/catalog";
-import type { ConnectionProvider } from "../features/connections/types";
 import type { GoogleConnectionStatus } from "../features/google/types";
 
-function ProviderMark({ provider }: { provider: ConnectionProvider }) {
-  const Icon = provider.category === "mail" ? Mail : CalendarDays;
-  return (
-    <span className={`provider-mark cat-${provider.category}`} aria-hidden="true">
-      <Icon size={18} strokeWidth={1.75} />
-    </span>
-  );
-}
-
 export const ConnectionsPage: React.FC = () => {
-  const catalog = getConnectionCatalog();
   const [googleStatus, setGoogleStatus] = useState<GoogleConnectionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -213,15 +200,6 @@ export const ConnectionsPage: React.FC = () => {
         <p className="field-error" role="alert">Could not load Google connection status. Check your connection and refresh this page.</p>
       )}
 
-      <section className="panel trust-panel">
-        <h2>How connections work in AgenSpace</h2>
-        <ul>
-          <li>Gmail permissions include reading, sending, and changing messages. Permanent deletion requires Google's broad full-mail permission, which requires additional OAuth review and may require security assessment. Every send or destructive action needs its own confirmation.</li>
-          <li>Imported suggestions stay in Needs review on your dashboard until you accept or dismiss them.</li>
-          <li>Disconnecting a provider revokes integration access while preserving all of your confirmed tasks and events.</li>
-        </ul>
-      </section>
-
       <ul className="provider-list">
         {/* Gmail provider card */}
         <li className="provider-row">
@@ -333,22 +311,6 @@ export const ConnectionsPage: React.FC = () => {
           </div>
         </li>
 
-        {/* Other planned connection catalog items */}
-        {catalog.providers
-          .filter((p) => p.id !== "gmail")
-          .map((provider) => (
-            <li key={provider.id} className="provider-row">
-              <ProviderMark provider={provider} />
-              <div className="provider-body">
-                <div className="provider-title">
-                  <h2>{provider.name}</h2>
-                  <span className="status-tag">Coming soon</span>
-                </div>
-                <p>{provider.description}</p>
-                <p className="provider-enables">{provider.enables.join(" · ")}</p>
-              </div>
-            </li>
-          ))}
       </ul>
     </div>
   );

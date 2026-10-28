@@ -3,7 +3,7 @@
 .page-plugins {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -135,7 +135,7 @@
   align-items: center;
   flex: 1;
   max-width: 440px;
-  min-width: 240px;
+  min-width: min(240px, 100%);
 }
 
 .marketplace-search-wrap .search-icon {
@@ -266,12 +266,14 @@
 
 /* Plugin Grid & Cards */
 .plugin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
 .plugin-card {
+  flex: 1 1 290px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -279,7 +281,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px;
-  box-shadow: var(--shadow-soft);
+  box-shadow: none;
   transition: transform var(--duration-fast) var(--ease), border-color var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
 }
 
@@ -416,10 +418,8 @@
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  min-height: 3em;
+  overflow-wrap: anywhere;
 }
 
 .plugin-capabilities-preview {
@@ -491,10 +491,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-details {
-  flex: 1;
+  flex: 0 1 auto;
 }
 
 /* Modal Overlay & Accessible Dialog */
@@ -787,8 +788,8 @@
   color: var(--text-secondary);
   background: var(--surface);
   padding: 10px 12px;
-  border-left: 3px solid var(--border-strong);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   line-height: 1.45;
 }
 
@@ -879,6 +880,24 @@
 
   .plugin-modal-actions {
     justify-content: flex-end;
+  }
+}
+
+@media (max-width: 420px) {
+  .marketplace-controls {
+    align-items: stretch;
+  }
+
+  .marketplace-search-wrap {
+    min-width: 0;
+  }
+
+  .plugin-card-actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .plugin-modal-dialog {
+    max-height: calc(100dvh - 24px);
   }
 }
 

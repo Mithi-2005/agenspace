@@ -36,5 +36,9 @@ export function applyTheme(preference: ThemePreference): ResolvedTheme {
   document.documentElement.setAttribute("data-theme", resolved);
   document.documentElement.setAttribute("data-theme-preference", preference);
   document.documentElement.style.colorScheme = resolved;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute(
+    "content",
+    resolved === "dark" ? "#121312" : "#efe6d6",
+  );
   return resolved;
 }

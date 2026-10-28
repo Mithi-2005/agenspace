@@ -37,7 +37,7 @@ def _build_listing(raw: dict[str, Any], installed: InstalledPlugin | None) -> Pl
             installation="installed" if is_installed else "not_installed",
             connection="unavailable",
             synchronization="never",
-            runtime_capabilities="planned",
+            runtime_capabilities=raw.get("runtime_capabilities", "planned"),
         ),
         is_installed=is_installed,
         installed_at=installed.installed_at if installed else None,

@@ -12,12 +12,11 @@ PLUGIN_CATALOG: list[dict[str, Any]] = [
     {
         "id": "gmail",
         "name": "Gmail",
-        "summary": "Official email intelligence and action-item ingestion from your Gmail inbox.",
+        "summary": "Sync Gmail and review detected tasks or events before adding them to your workspace.",
         "description": (
-            "Connect your Google Mail account to enable Moon to review unread notifications, "
-            "surface pending follow-ups, synthesize email threads, and draft contextual replies. "
-            "All OAuth access is restricted to verified Google scopes with strictly scoped read "
-            "and compose privileges."
+            "Connect Gmail to find possible tasks and events in your messages. Review each suggestion "
+            "before adding it to your workspace. You can also send, archive, move to trash, or "
+            "permanently delete messages with explicit confirmation."
         ),
         "category": "Communication",
         "icon": "mail",
@@ -26,27 +25,23 @@ PLUGIN_CATALOG: list[dict[str, Any]] = [
             "verified": True,
             "support_url": "https://workspace.google.com",
         },
-        "status": "planned",
-        "integration_status": "planned",
+        "status": "available",
+        "integration_status": "available",
+        "runtime_capabilities": "active",
         "capabilities": [
-            "Automated inbox message triage",
-            "Action item and deadline extraction",
-            "Smart draft follow-up generation",
-            "Thread summary digests for Moon assistant",
+            "Detect possible tasks in email",
+            "Detect possible event details in email",
+            "Review, accept, or dismiss extracted suggestions",
+            "Send, archive, or remove messages with confirmation",
         ],
         "permissions": [
             {
-                "scope": "https://www.googleapis.com/auth/gmail.readonly",
-                "description": "Read email messages and headers to detect follow-ups",
+                "scope": "https://mail.google.com/",
+                "description": "Read and manage Gmail messages, including sending, archiving, and deletion",
                 "required": True,
             },
-            {
-                "scope": "https://www.googleapis.com/auth/gmail.compose",
-                "description": "Create draft responses for your explicit confirmation",
-                "required": False,
-            },
         ],
-        "setup_requirements": "Google OAuth 2.0 with offline access token. Requires explicit user consent.",
+        "setup_requirements": "Connect through Google OAuth and review the requested Gmail access. Sending and destructive message actions each require confirmation.",
     },
     {
         "id": "google-classroom",
